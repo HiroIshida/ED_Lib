@@ -19,33 +19,33 @@
 
 /** PI */
 #ifndef M_PI
-#define M_PI   3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif /* !M_PI */
 
 #define RELATIVE_ERROR_FACTOR 100.0
 
 // Lookup table (LUT) for NFA computation
-class NFALUT {
-public:
+class NFALUT
+{
+ public:
+  NFALUT(int size, double _prob, double _logNT);
+  ~NFALUT();
 
-	NFALUT(int size, double _prob, double _logNT);
-	~NFALUT();
+  int *LUT;  // look up table
+  int LUTSize;
 
-	int *LUT; // look up table
-	int LUTSize;
+  double prob;
+  double logNT;
 
-	double prob;
-	double logNT;
+  bool checkValidationByNFA(int n, int k);
+  static double myAtan2(double yy, double xx);
 
-	bool checkValidationByNFA(int n, int k);
-	static double myAtan2(double yy, double xx);
-
-private:
-	double nfa(int n, int k);
-	static double log_gamma_lanczos(double x);
-	static double log_gamma_windschitl(double x);
-	static double log_gamma(double x);
-	static int double_equal(double a, double b);
+ private:
+  double nfa(int n, int k);
+  static double log_gamma_lanczos(double x);
+  static double log_gamma_windschitl(double x);
+  static double log_gamma(double x);
+  static int double_equal(double a, double b);
 };
 
 #endif
