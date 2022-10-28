@@ -1,6 +1,8 @@
 #ifndef _NFA_
 #define _NFA_
 
+#include <vector>
+
 #define TABSIZE 100000
 
 //----------------------------------------------
@@ -31,7 +33,7 @@ class NFALUT
   NFALUT(int size, double _prob, double _logNT);
   ~NFALUT();
 
-  int *LUT;  // look up table
+  std::vector<int> LUT;  // look up table
   int LUTSize;
 
   double prob;

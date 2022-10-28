@@ -31,6 +31,7 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
 
   edgeImage = Mat(height, width, CV_8UC1, Scalar(0));  // initialize edge Image
   smoothImage = Mat(height, width, CV_8UC1);
+  dirImage = Mat(height, width, CV_8UC1);
   gradImage = Mat(height, width, CV_16SC1);  // gradImage contains short values
 
   srcImg = srcImage.data;
@@ -45,10 +46,9 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
 
   // Assign Pointers from Mat's data
   smoothImg = smoothImage.data;
+  dirImg = dirImage.data;
   gradImg = (short *)gradImage.data;
   edgeImg = edgeImage.data;
-
-  dirImg = new unsigned char[width * height];
 
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
   ComputeGradient();
@@ -58,8 +58,6 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
 
   /*------------ JOIN ANCHORS -------------------*/
   JoinAnchorPointsUsingSortedAnchors();
-
-  delete[] dirImg;
 }
 
 // This constructor for use of EDLines and EDCircle with ED given as constructor argument
@@ -81,11 +79,13 @@ ED::ED(const ED &cpyObj)
 
   edgeImage = cpyObj.edgeImage.clone();
   smoothImage = cpyObj.smoothImage.clone();
+  dirImage = cpyObj.dirImage.clone();
   gradImage = cpyObj.gradImage.clone();
 
   srcImg = srcImage.data;
 
   smoothImg = smoothImage.data;
+  dirImg = dirImage.data;
   gradImg = (short *)gradImage.data;
   edgeImg = edgeImage.data;
 
@@ -418,14 +418,14 @@ void ED::ComputeAnchorPoints()
 
 void ED::JoinAnchorPointsUsingSortedAnchors()
 {
-  int *chainNos = new int[(width + height) * 8];
-
-  Point *pixels = new Point[width * height];
-  StackNode *stack = new StackNode[width * height];
-  Chain *chains = new Chain[width * height];
+  std::vector<int> chainNos((width + height) * 8);
+  std::vector<Point> pixels(width * height);
+  std::vector<StackNode> stack(width * height);
+  std::vector<Chain> chains(width * height);
 
   // sort the anchor points by their gradient value in decreasing order
-  int *A = sortAnchorsByGradValue1();
+  std::vector<int> A;
+  sortAnchorsByGradValue1(A);
 
   // Now join the anchors starting with the anchor having the greatest gradient value
   int totalPixels = 0;
@@ -1071,13 +1071,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
   // pop back last segment from vector
   // because of one preallocation in the beginning, it will always empty
   segmentPoints.pop_back();
-
-  // Clean up
-  delete[] A;
-  delete[] chains;
-  delete[] stack;
-  delete[] chainNos;
-  delete[] pixels;
 }
 
 void ED::sortAnchorsByGradValue()
@@ -1115,11 +1108,10 @@ void ED::sortAnchorsByGradValue()
   */
 }
 
-int *ED::sortAnchorsByGradValue1()
+void ED::sortAnchorsByGradValue1(std::vector<int> &A)
 {
-  int SIZE = 128 * 256;
-  int *C = new int[SIZE];
-  memset(C, 0, sizeof(int) * SIZE);
+  const int SIZE = 128 * 256;
+  std::vector<int> C(SIZE, 0);
 
   // Count the number of grad values
   for (int i = 1; i < height - 1; i++)
@@ -1137,8 +1129,8 @@ int *ED::sortAnchorsByGradValue1()
   for (int i = 1; i < SIZE; i++) C[i] += C[i - 1];
 
   int noAnchors = C[SIZE - 1];
-  int *A = new int[noAnchors];
-  memset(A, 0, sizeof(int) * noAnchors);
+  A.clear();
+  A.resize(noAnchors, 0);
 
   for (int i = 1; i < height - 1; i++)
   {
@@ -1152,8 +1144,6 @@ int *ED::sortAnchorsByGradValue1()
     }                            // end-for
   }                              // end-for
 
-  delete[] C;
-
   /*
   ofstream myFile;
   myFile.open("aNew.txt");
@@ -1161,11 +1151,9 @@ int *ED::sortAnchorsByGradValue1()
           myFile << A[i] << endl;
 
   myFile.close(); */
-
-  return A;
 }
 
-int ED::LongestChain(Chain *chains, int root)
+int ED::LongestChain(std::vector<Chain> &chains, int root)
 {
   if (root == -1 || chains[root].len == 0) return 0;
 
@@ -1191,7 +1179,7 @@ int ED::LongestChain(Chain *chains, int root)
   return chains[root].len + max;
 }  // end-LongestChain
 
-int ED::RetrieveChainNos(Chain *chains, int root, int chainNos[])
+int ED::RetrieveChainNos(std::vector<Chain> &chains, int root, std::vector<int> &chainNos)
 {
   int count = 0;
 

@@ -21,8 +21,8 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
     min_line_len = 9;
 
   // Temporary buffers used during line fitting
-  double *x = new double[(width + height) * 8];
-  double *y = new double[(width + height) * 8];
+  std::vector<double> x((width + height) * 8, 0);
+  std::vector<double> y((width + height) * 8, 0);
 
   linesNo = 0;
 
@@ -36,7 +36,7 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
       x[k] = segment[k].x;
       y[k] = segment[k].y;
     }
-    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+    SplitSegment2Lines(&x[0], &y[0], segment.size(), segmentNumber);
   }
 
   /*----------- JOIN COLLINEAR LINES ----------------*/
@@ -51,7 +51,7 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
   int lutSize = (width + height) / 8;
-  nfa = new NFALUT(lutSize, prob, logNT);  // create look up table
+  nfa = std::make_shared<NFALUT>(lutSize, prob, logNT);  // create look up table
 
   ValidateLineSegments();
 
@@ -67,10 +67,6 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
 
     linePoints.push_back(LS(start, end));
   }  // end-for
-
-  delete[] x;
-  delete[] y;
-  delete nfa;
 }
 
 EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
@@ -89,8 +85,8 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
     min_line_len = 9;
 
   // Temporary buffers used during line fitting
-  double *x = new double[(width + height) * 8];
-  double *y = new double[(width + height) * 8];
+  std::vector<double> x((width + height) * 8, 0);
+  std::vector<double> y((width + height) * 8, 0);
 
   linesNo = 0;
 
@@ -104,7 +100,7 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
       x[k] = segment[k].x;
       y[k] = segment[k].y;
     }
-    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+    SplitSegment2Lines(&x[0], &y[0], segment.size(), segmentNumber);
   }
 
   /*----------- JOIN COLLINEAR LINES ----------------*/
@@ -119,7 +115,7 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
   int lutSize = (width + height) / 8;
-  nfa = new NFALUT(lutSize, prob, logNT);  // create look up table
+  nfa = std::make_shared<NFALUT>(lutSize, prob, logNT);  // create look up table
 
   ValidateLineSegments();
 
@@ -135,10 +131,6 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
 
     linePoints.push_back(LS(start, end));
   }  // end-for
-
-  delete[] x;
-  delete[] y;
-  delete nfa;
 }
 
 EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
@@ -157,8 +149,8 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
     min_line_len = 9;
 
   // Temporary buffers used during line fitting
-  double *x = new double[(width + height) * 8];
-  double *y = new double[(width + height) * 8];
+  std::vector<double> x((width + height) * 8, 0);
+  std::vector<double> y((width + height) * 8, 0);
 
   linesNo = 0;
 
@@ -172,7 +164,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
       x[k] = segment[k].x;
       y[k] = segment[k].y;
     }
-    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+    SplitSegment2Lines(&x[0], &y[0], segment.size(), segmentNumber);
   }
 
   /*----------- JOIN COLLINEAR LINES ----------------*/
@@ -187,7 +179,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
   int lutSize = (width + height) / 8;
-  nfa = new NFALUT(lutSize, prob, logNT);  // create look up table
+  nfa = std::make_shared<NFALUT>(lutSize, prob, logNT);  // create look up table
 
   // Since edge segments are validated in ed color,
   // Validation is not performed again in line segment detection
@@ -206,10 +198,6 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
 
     linePoints.push_back(LS(start, end));
   }  // end-for
-
-  delete[] x;
-  delete[] y;
-  delete nfa;
 }
 
 EDLines::EDLines()
@@ -331,7 +319,7 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels, int segment
       if (goodPixelCount >= 2)
       {
         len += lastGoodIndex - startIndex + 1;
-        LineFit(x, y, len, lastA, lastB, lastInvert);  // faster LineFit
+        LineFit(&x[0], &y[0], len, lastA, lastB, lastInvert);  // faster LineFit
         index = lastGoodIndex + 1;
       }  // end-if
 
@@ -417,8 +405,8 @@ void EDLines::JoinCollinearLines()
 
 void EDLines::ValidateLineSegments()
 {
-  int *x = new int[(width + height) * 4];
-  int *y = new int[(width + height) * 4];
+  std::vector<int> x((width + height) * 4, 0);
+  std::vector<int> y((width + height) * 4, 0);
 
   int noValidLines = 0;
   int eraseOffset = 0;
@@ -518,12 +506,9 @@ void EDLines::ValidateLineSegments()
   }    // end-for
 
   linesNo = noValidLines;
-
-  delete x;
-  delete y;
 }
 
-bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls)
+bool EDLines::ValidateLineSegmentRect(std::vector<int> &x, std::vector<int> &y, LineSegment *ls)
 {
   // Compute Line's angle
   double lineAngle;
@@ -1053,8 +1038,8 @@ void EDLines::UpdateLineParameters(LineSegment *ls)
   }    // end-else
 }
 
-void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey, int ptsx[],
-                                  int ptsy[], int *pNoPoints)
+void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
+                                  std::vector<int> &ptsx, std::vector<int> &ptsy, int *pNoPoints)
 {
   double vxTmp[4], vyTmp[4];
   double vx[4], vy[4];

@@ -9,16 +9,16 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
   noCircles1 = 0;
-  circles1 = new Circle[(width + height) * 8];
+  circles1.resize((width + height) * 8);
 
   // ----------------------------------- DETECT LINES ---------------------------------
   int bufferSize = 0;
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines.resize(segmentNos + 1, 0);
 
-  bm = new BufferManager(bufferSize * 8);
+  bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
@@ -110,7 +110,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
 
   // ------------------------------- DETECT ARCS ---------------------------------
 
-  info = new Info[lines.size()];
+  info.resize(lines.size());
 
   // Compute the angle information for each line segment
   for (int i = 0; i < segmentNos; i++)
@@ -163,20 +163,20 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
 
-  edarcs1 = new EDArcs(maxNoOfCircles);
+  edarcs1 = std::make_shared<EDArcs>(maxNoOfCircles);
   DetectArcs(lines);  // Detect all arcs
 
   // Try to join arcs that are almost perfectly circular.
   // Use the distance between the arc end-points as a metric in choosing in choosing arcs to join
-  edarcs2 = new EDArcs(maxNoOfCircles);
+  edarcs2 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs1();
 
   // Try to join arcs that belong to the same segment
-  edarcs3 = new EDArcs(maxNoOfCircles);
+  edarcs3 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs2();
 
   // Try to combine arcs that belong to different segments
-  edarcs4 = new EDArcs(maxNoOfCircles);  // The remaining arcs
+  edarcs4 = std::make_shared<EDArcs>(maxNoOfCircles);  // The remaining arcs
   JoinArcs3();
 
   // Finally, go over the arcs & circles, and generate candidate circles
@@ -184,14 +184,14 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
 
   //----------------------------- VALIDATE CIRCLES --------------------------
   noCircles2 = 0;
-  circles2 = new Circle[maxNoOfCircles];
+  circles2.resize(maxNoOfCircles);
   GaussianBlur(srcImage, smoothImage, Size(), 0.50);  // calculate kernel from sigma;
 
   ValidateCircles();
 
   //----------------------------- JOIN CIRCLES --------------------------
   noCircles3 = 0;
-  circles3 = new Circle[maxNoOfCircles];
+  circles3.resize(maxNoOfCircles);
   JoinCircles();
 
   noCircles = 0;
@@ -226,20 +226,6 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
 
     }  // end-else
   }    // end-for
-
-  // clean up
-  delete edarcs1;
-  delete edarcs2;
-  delete edarcs3;
-  delete edarcs4;
-
-  delete[] circles1;
-  delete[] circles2;
-  delete[] circles3;
-
-  delete bm;
-  delete[] segmentStartLines;
-  delete[] info;
 }
 
 EDCircles::EDCircles(ED obj) : EDPF(obj)
@@ -248,16 +234,16 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
   noCircles1 = 0;
-  circles1 = new Circle[(width + height) * 8];
+  circles1.resize((width + height) * 8);
 
   // ----------------------------------- DETECT LINES ---------------------------------
   int bufferSize = 0;
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines.resize(segmentNos + 1, 0);
 
-  bm = new BufferManager(bufferSize * 8);
+  bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
@@ -348,8 +334,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
   segmentStartLines[segmentNos] = lines.size();
 
   // ------------------------------- DETECT ARCS ---------------------------------
-
-  info = new Info[lines.size()];
+  info.resize(lines.size());
 
   // Compute the angle information for each line segment
   for (int i = 0; i < segmentNos; i++)
@@ -402,20 +387,20 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
 
-  edarcs1 = new EDArcs(maxNoOfCircles);
+  edarcs1 = std::make_shared<EDArcs>(maxNoOfCircles);
   DetectArcs(lines);  // Detect all arcs
 
   // Try to join arcs that are almost perfectly circular.
   // Use the distance between the arc end-points as a metric in choosing in choosing arcs to join
-  edarcs2 = new EDArcs(maxNoOfCircles);
+  edarcs2 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs1();
 
   // Try to join arcs that belong to the same segment
-  edarcs3 = new EDArcs(maxNoOfCircles);
+  edarcs3 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs2();
 
   // Try to combine arcs that belong to different segments
-  edarcs4 = new EDArcs(maxNoOfCircles);  // The remaining arcs
+  edarcs4 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs3();
 
   // Finally, go over the arcs & circles, and generate candidate circles
@@ -423,14 +408,14 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
 
   //----------------------------- VALIDATE CIRCLES --------------------------
   noCircles2 = 0;
-  circles2 = new Circle[maxNoOfCircles];
+  circles2.resize(maxNoOfCircles);
   GaussianBlur(srcImage, smoothImage, Size(), 0.50);  // calculate kernel from sigma;
 
   ValidateCircles();
 
   //----------------------------- JOIN CIRCLES --------------------------
   noCircles3 = 0;
-  circles3 = new Circle[maxNoOfCircles];
+  circles3.resize(maxNoOfCircles);
   JoinCircles();
 
   noCircles = 0;
@@ -465,20 +450,6 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
 
     }  // end-else
   }    // end-for
-
-  // clean up
-  delete edarcs1;
-  delete edarcs2;
-  delete edarcs3;
-  delete edarcs4;
-
-  delete[] circles1;
-  delete[] circles2;
-  delete[] circles3;
-
-  delete bm;
-  delete[] segmentStartLines;
-  delete[] info;
 }
 
 EDCircles::EDCircles(EDColor obj) : EDPF(obj)
@@ -487,16 +458,16 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
   noCircles1 = 0;
-  circles1 = new Circle[(width + height) * 8];
+  circles1.resize((width + height) * 8);
 
   // ----------------------------------- DETECT LINES ---------------------------------
   int bufferSize = 0;
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines.resize(segmentNos + 1, 0);
 
-  bm = new BufferManager(bufferSize * 8);
+  bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
@@ -588,7 +559,7 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
 
   // ------------------------------- DETECT ARCS ---------------------------------
 
-  info = new Info[lines.size()];
+  info.resize(lines.size());
 
   // Compute the angle information for each line segment
   for (int i = 0; i < segmentNos; i++)
@@ -641,20 +612,20 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
 
-  edarcs1 = new EDArcs(maxNoOfCircles);
+  edarcs1 = std::make_shared<EDArcs>(maxNoOfCircles);
   DetectArcs(lines);  // Detect all arcs
 
   // Try to join arcs that are almost perfectly circular.
   // Use the distance between the arc end-points as a metric in choosing in choosing arcs to join
-  edarcs2 = new EDArcs(maxNoOfCircles);
+  edarcs2 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs1();
 
   // Try to join arcs that belong to the same segment
-  edarcs3 = new EDArcs(maxNoOfCircles);
+  edarcs3 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs2();
 
   // Try to combine arcs that belong to different segments
-  edarcs4 = new EDArcs(maxNoOfCircles);  // The remaining arcs
+  edarcs4 = std::make_shared<EDArcs>(maxNoOfCircles);
   JoinArcs3();
 
   // Finally, go over the arcs & circles, and generate candidate circles
@@ -707,20 +678,6 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
 
     }  // end-else
   }    // end-for
-
-  // clean up
-  delete edarcs1;
-  delete edarcs2;
-  delete edarcs3;
-  delete edarcs4;
-
-  delete[] circles1;
-  // delete[] circles2;
-  // delete[] circles3;
-
-  delete bm;
-  delete[] segmentStartLines;
-  delete[] info;
 }
 
 cv::Mat EDCircles::drawResult(bool onImage, ImageStyle style)
@@ -763,7 +720,7 @@ int EDCircles::getEllipsesNo() { return noEllipses; }
 void EDCircles::GenerateCandidateCircles()
 {
   // Now, go over the circular arcs & add them to circles1
-  MyArc *arcs = edarcs4->arcs;
+  auto &arcs = edarcs4->arcs;
   for (int i = 0; i < edarcs4->noArcs; i++)
   {
     if (arcs[i].isEllipse)
@@ -1212,14 +1169,14 @@ void EDCircles::ValidateCircles()
   double min = width;
   if (height < min) min = height;
 
-  double *px = new double[8 * (width + height)];
-  double *py = new double[8 * (width + height)];
+  std::vector<double> px(8 * (width + height));
+  std::vector<double> py(8 * (width + height));
 
   // logNT & LUT for NFA computation
   double logNT = 2 * log10((double)(width * height)) + log10((double)(width + height));
 
   int lutSize = (width + height) / 8;
-  nfa = new NFALUT(lutSize, prob, logNT);  // create look up table
+  nfa = std::make_shared<NFALUT>(lutSize, prob, logNT);  // create look up table
 
   // Validate circles & ellipses
   bool validateAgain;
@@ -1251,7 +1208,7 @@ void EDCircles::ValidateCircles()
     }
     else
     {
-      ComputeCirclePoints(xc, yc, radius, px, py, &noPoints);
+      ComputeCirclePoints(xc, yc, radius, px, py, noPoints);
     }  // end-else
 
     int pr = -1;  // previous row
@@ -1456,19 +1413,15 @@ void EDCircles::ValidateCircles()
   }  // end-for
 
   noCircles2 = count;
-
-  delete[] px;
-  delete[] py;
-  delete nfa;
 }
 
 void EDCircles::JoinCircles()
 {
   // Sort the circles wrt their radius
-  sortCircle(circles2, noCircles2);
+  sortCircles(circles2, noCircles2);
 
   int noCircles = noCircles2;
-  Circle *circles = circles2;
+  auto &circles = circles2;
 
   for (int i = 0; i < noCircles; i++)
   {
@@ -1479,10 +1432,9 @@ void EDCircles::JoinCircles()
     }  // end-if
   }    // end-for
 
-  bool *taken = new bool[noCircles];
-  for (int i = 0; i < noCircles; i++) taken[i] = false;
+  std::vector<bool> taken(noCircles, false);
 
-  int *candidateCircles = new int[noCircles];
+  std::vector<int> candidateCircles(noCircles, 0);
   int noCandidateCircles;
 
   for (int i = 0; i < noCircles; i++)
@@ -1638,9 +1590,6 @@ void EDCircles::JoinCircles()
       noCircles3++;
     }  // end-else
   }    // end-for
-
-  delete[] taken;
-  delete[] candidateCircles;
 }
 
 void EDCircles::JoinArcs1()
@@ -1651,10 +1600,9 @@ void EDCircles::JoinArcs1()
   sortArc(edarcs1->arcs, edarcs1->noArcs);
 
   int noArcs = edarcs1->noArcs;
-  MyArc *arcs = edarcs1->arcs;
+  auto &arcs = edarcs1->arcs;
 
-  bool *taken = new bool[noArcs];
-  for (int i = 0; i < noArcs; i++) taken[i] = false;
+  std::vector<bool> taken(noArcs, false);
 
   struct CandidateArc
   {
@@ -1664,7 +1612,7 @@ void EDCircles::JoinArcs1()
     double dist;  // min distance between the end points
   };
 
-  CandidateArc *candidateArcs = new CandidateArc[noArcs];
+  std::vector<CandidateArc> candidateArcs(noArcs);
   int noCandidateArcs;
 
   for (int i = 0; i < noArcs; i++)
@@ -1901,9 +1849,6 @@ void EDCircles::JoinArcs1()
       bm->move(NoPixels);
     }  // end-if
   }    // end-for
-
-  delete[] taken;
-  delete[] candidateArcs;
 }
 
 void EDCircles::JoinArcs2()
@@ -1914,10 +1859,9 @@ void EDCircles::JoinArcs2()
   sortArc(edarcs2->arcs, edarcs2->noArcs);
 
   int noArcs = edarcs2->noArcs;
-  MyArc *arcs = edarcs2->arcs;
+  auto &arcs = edarcs2->arcs;
 
-  bool *taken = new bool[noArcs];
-  for (int i = 0; i < noArcs; i++) taken[i] = false;
+  std::vector<bool> taken(noArcs, false);
 
   struct CandidateArc
   {
@@ -1927,7 +1871,7 @@ void EDCircles::JoinArcs2()
     double dist;  // min distance between the end points
   };
 
-  CandidateArc *candidateArcs = new CandidateArc[noArcs];
+  std::vector<CandidateArc> candidateArcs(noArcs);
   int noCandidateArcs;
 
   for (int i = 0; i < noArcs; i++)
@@ -2154,9 +2098,6 @@ void EDCircles::JoinArcs2()
       bm->move(NoPixels);
     }  // end-if
   }    // end-for
-
-  delete[] taken;
-  delete[] candidateArcs;
 }
 
 void EDCircles::JoinArcs3()
@@ -2167,10 +2108,9 @@ void EDCircles::JoinArcs3()
   sortArc(edarcs3->arcs, edarcs3->noArcs);
 
   int noArcs = edarcs3->noArcs;
-  MyArc *arcs = edarcs3->arcs;
+  auto &arcs = edarcs3->arcs;
 
-  bool *taken = new bool[noArcs];
-  for (int i = 0; i < noArcs; i++) taken[i] = false;
+  std::vector<bool> taken(noArcs, false);
 
   struct CandidateArc
   {
@@ -2180,7 +2120,7 @@ void EDCircles::JoinArcs3()
     double dist;  // min distance between the end points
   };
 
-  CandidateArc *candidateArcs = new CandidateArc[noArcs];
+  std::vector<CandidateArc> candidateArcs(noArcs);
   int noCandidateArcs;
 
   for (int i = 0; i < noArcs; i++)
@@ -2433,13 +2373,10 @@ void EDCircles::JoinArcs3()
       bm->move(NoPixels);
     }  // end-if
   }    // end-for
-
-  delete[] taken;
-  delete[] candidateArcs;
 }
 
-Circle *EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double yc, double r,
-                             double circleFitError, double *x, double *y, int noPixels)
+void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                          double r, double circleFitError, double *x, double *y, int noPixels)
 {
   circles[noCircles].xc = xc;
   circles[noCircles].yc = yc;
@@ -2454,13 +2391,11 @@ Circle *EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double 
   circles[noCircles].isEllipse = false;
 
   noCircles++;
-
-  return &circles[noCircles - 1];
 }
 
-Circle *EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double yc, double r,
-                             double circleFitError, EllipseEquation *pEq, double ellipseFitError,
-                             double *x, double *y, int noPixels)
+void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                          double r, double circleFitError, EllipseEquation *pEq,
+                          double ellipseFitError, double *x, double *y, int noPixels)
 {
   circles[noCircles].xc = xc;
   circles[noCircles].yc = yc;
@@ -2477,11 +2412,9 @@ Circle *EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double 
   circles[noCircles].isEllipse = true;
 
   noCircles++;
-
-  return &circles[noCircles - 1];
 }
 
-void EDCircles::sortCircles(Circle *circles, int noCircles)
+void EDCircles::sortCircles(std::vector<Circle> &circles, int noCircles)
 {
   for (int i = 0; i < noCircles - 1; i++)
   {
@@ -2895,35 +2828,62 @@ double EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq, double
 // on the ellipse periferi. These points can be used to draw the ellipse
 // noPoints must be an even number.
 //
-void EDCircles::ComputeEllipsePoints(double *pvec, double *px, double *py, int noPoints)
+void EDCircles::ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py,
+                                     int noPoints)
 {
   if (noPoints % 2) noPoints--;
   int npts = noPoints / 2;
 
-  double **u = AllocateMatrix(3, npts + 1);
-  double **Aiu = AllocateMatrix(3, npts + 1);
-  double **L = AllocateMatrix(3, npts + 1);
-  double **B = AllocateMatrix(3, npts + 1);
-  double **Xpos = AllocateMatrix(3, npts + 1);
-  double **Xneg = AllocateMatrix(3, npts + 1);
-  double **ss1 = AllocateMatrix(3, npts + 1);
-  double **ss2 = AllocateMatrix(3, npts + 1);
-  double *lambda = new double[npts + 1];
-  double **uAiu = AllocateMatrix(3, npts + 1);
-  double **A = AllocateMatrix(3, 3);
-  double **Ai = AllocateMatrix(3, 3);
-  double **Aib = AllocateMatrix(3, 2);
-  double **b = AllocateMatrix(3, 2);
-  double **r1 = AllocateMatrix(2, 2);
+  std::vector<std::vector<double>> u;
+  AllocateMatrix(3, npts + 1, u);
+
+  std::vector<std::vector<double>> Aiu;
+  AllocateMatrix(3, npts + 1, Aiu);
+
+  std::vector<std::vector<double>> L;
+  AllocateMatrix(3, npts + 1, L);
+
+  std::vector<std::vector<double>> B;
+  AllocateMatrix(3, npts + 1, B);
+
+  std::vector<std::vector<double>> Xpos;
+  AllocateMatrix(3, npts + 1, Xpos);
+
+  std::vector<std::vector<double>> Xneg;
+  AllocateMatrix(3, npts + 1, Xneg);
+
+  std::vector<std::vector<double>> ss1;
+  AllocateMatrix(3, npts + 1, ss1);
+
+  std::vector<std::vector<double>> ss2;
+  AllocateMatrix(3, npts + 1, ss2);
+
+  std::vector<std::vector<double>> uAiu;
+  AllocateMatrix(3, npts + 1, uAiu);
+
+  std::vector<std::vector<double>> A;
+  AllocateMatrix(3, 3, A);
+
+  std::vector<std::vector<double>> Ai;
+  AllocateMatrix(3, 3, Ai);
+
+  std::vector<std::vector<double>> Aib;
+  AllocateMatrix(3, 2, Aib);
+
+  std::vector<std::vector<double>> b;
+  AllocateMatrix(3, 2, b);
+
+  std::vector<std::vector<double>> r1;
+  AllocateMatrix(2, 2, r1);
+
   double Ao, Ax, Ay, Axx, Ayy, Axy;
+  std::vector<double> lambda(npts + 1, 0);
 
   double pi = 3.14781;
   double theta;
   int i;
   int j;
   double kk;
-
-  memset(lambda, 0, sizeof(double) * (npts + 1));
 
   Ao = pvec[6];
   Ax = pvec[4];
@@ -3000,22 +2960,6 @@ void EDCircles::ComputeEllipsePoints(double *pvec, double *px, double *py, int n
       py[j - 1 + npts] = Xneg[2][j];
     }
   }
-
-  DeallocateMatrix(u, 3);
-  DeallocateMatrix(Aiu, 3);
-  DeallocateMatrix(L, 3);
-  DeallocateMatrix(B, 3);
-  DeallocateMatrix(Xpos, 3);
-  DeallocateMatrix(Xneg, 3);
-  DeallocateMatrix(ss1, 3);
-  DeallocateMatrix(ss2, 3);
-  delete[] lambda;
-  DeallocateMatrix(uAiu, 3);
-  DeallocateMatrix(A, 3);
-  DeallocateMatrix(Ai, 3);
-  DeallocateMatrix(Aib, 3);
-  DeallocateMatrix(b, 3);
-  DeallocateMatrix(r1, 2);
 }
 
 // Tries to join the last two arcs if their end-points are very close to each other
@@ -3023,7 +2967,7 @@ void EDCircles::ComputeEllipsePoints(double *pvec, double *px, double *py, int n
 // is broken due to a noisy patch along the arc, and the long arc is broken into two or more arcs.
 // This function will join such broken arcs
 //
-void EDCircles::joinLastTwoArcs(MyArc *arcs, int &noArcs)
+void EDCircles::joinLastTwoArcs(std::vector<MyArc> &arcs, int &noArcs)
 {
   if (noArcs < 2) return;
 
@@ -3083,7 +3027,7 @@ void EDCircles::joinLastTwoArcs(MyArc *arcs, int &noArcs)
 //-----------------------------------------------------------------------
 // Add a new arc to arcs
 //
-void EDCircles::addArc(MyArc *arcs, int &noArcs, double xc, double yc, double r,
+void EDCircles::addArc(std::vector<MyArc> &arcs, int &noArcs, double xc, double yc, double r,
                        double circleFitError, double sTheta, double eTheta, int turn, int segmentNo,
                        int sx, int sy, int ex, int ey, double *x, double *y, int noPixels,
                        double overlapRatio)
@@ -3121,7 +3065,7 @@ void EDCircles::addArc(MyArc *arcs, int &noArcs, double xc, double yc, double r,
 //-------------------------------------------------------------------------
 // Add an elliptic arc to the list of arcs
 //
-void EDCircles::addArc(MyArc *arcs, int &noArcs, double xc, double yc, double r,
+void EDCircles::addArc(std::vector<MyArc> &arcs, int &noArcs, double xc, double yc, double r,
                        double circleFitError, double sTheta, double eTheta, int turn, int segmentNo,
                        EllipseEquation *pEq, double ellipseFitError, int sx, int sy, int ex, int ey,
                        double *x, double *y, int noPixels, double overlapRatio)
@@ -3328,7 +3272,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r, double 
   *peTheta = eTheta;
 }
 
-void EDCircles::sortArc(MyArc *arcs, int noArcs)
+void EDCircles::sortArc(std::vector<MyArc> &arcs, int noArcs)
 {
   for (int i = 0; i < noArcs - 1; i++)
   {
@@ -3432,8 +3376,8 @@ bool EDCircles::CircleFit(double *x, double *y, int N, double *pxc, double *pyc,
 //------------------------------------------------------------------------------------
 // Computes the points making up a circle
 //
-void EDCircles::ComputeCirclePoints(double xc, double yc, double r, double *px, double *py,
-                                    int *noPoints)
+void EDCircles::ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px,
+                                    std::vector<double> &py, int &noPoints)
 {
   int len = (int)(TWOPI * r + 0.5);
   double angleInc = TWOPI / len;
@@ -3455,45 +3399,42 @@ void EDCircles::ComputeCirclePoints(double xc, double yc, double r, double *px, 
     count++;
   }  // end-while
 
-  *noPoints = count;
-}
-
-void EDCircles::sortCircle(Circle *circles, int noCircles)
-{
-  for (int i = 0; i < noCircles - 1; i++)
-  {
-    int max = i;
-    for (int j = i + 1; j < noCircles; j++)
-    {
-      if (circles[j].r > circles[max].r) max = j;
-    }  // end-for
-
-    if (max != i)
-    {
-      Circle t = circles[i];
-      circles[i] = circles[max];
-      circles[max] = t;
-    }  // end-if
-  }    // end-for
+  noPoints = count;
 }
 
 bool EDCircles::EllipseFit(double *x, double *y, int noPoints, EllipseEquation *pResult, int mode)
 {
-  double **D = AllocateMatrix(noPoints + 1, 7);
-  double **S = AllocateMatrix(7, 7);
-  double **Const = AllocateMatrix(7, 7);
-  double **temp = AllocateMatrix(7, 7);
-  double **L = AllocateMatrix(7, 7);
-  double **C = AllocateMatrix(7, 7);
+  std::vector<std::vector<double>> D;
+  AllocateMatrix(noPoints + 1, 7, D);
 
-  double **invL = AllocateMatrix(7, 7);
-  double *d = new double[7];
-  double **V = AllocateMatrix(7, 7);
-  double **sol = AllocateMatrix(7, 7);
+  std::vector<std::vector<double>> S;
+  AllocateMatrix(7, 7, S);
+
+  std::vector<std::vector<double>> Const;
+  AllocateMatrix(7, 7, Const);
+
+  std::vector<std::vector<double>> temp;
+  AllocateMatrix(7, 7, temp);
+
+  std::vector<std::vector<double>> L;
+  AllocateMatrix(7, 7, L);
+
+  std::vector<std::vector<double>> C;
+  AllocateMatrix(7, 7, C);
+
+  std::vector<std::vector<double>> invL;
+  AllocateMatrix(7, 7, invL);
+
+  std::vector<double> d(7, 0);
+
+  std::vector<std::vector<double>> V;
+  AllocateMatrix(7, 7, V);
+
+  std::vector<std::vector<double>> sol;
+  AllocateMatrix(7, 7, sol);
+
   double tx, ty;
   int nrot = 0;
-
-  memset(d, 0, sizeof(double) * 7);
 
   switch (mode)
   {
@@ -3594,17 +3535,6 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints, EllipseEquation *
     }  // end-for
   }    // end-if
 
-  DeallocateMatrix(D, noPoints + 1);
-  DeallocateMatrix(S, 7);
-  DeallocateMatrix(Const, 7);
-  DeallocateMatrix(temp, 7);
-  DeallocateMatrix(L, 7);
-  DeallocateMatrix(C, 7);
-  DeallocateMatrix(invL, 7);
-  delete[] d;
-  DeallocateMatrix(V, 7);
-  DeallocateMatrix(sol, 7);
-
   if (valid)
   {
     int len = (int)computeEllipsePerimeter(pResult);
@@ -3614,21 +3544,17 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints, EllipseEquation *
   return valid;
 }
 
-double **EDCircles::AllocateMatrix(int noRows, int noColumns)
+void EDCircles::AllocateMatrix(const int noRows, const int noColumns,
+                               std::vector<std::vector<double>> &matrix)
 {
-  double **m = new double *[noRows];
-
-  for (int i = 0; i < noRows; i++)
-  {
-    m[i] = new double[noColumns];
-    memset(m[i], 0, sizeof(double) * noColumns);
-  }  // end-for
-
-  return m;
+  matrix.clear();
+  matrix.resize(noRows, std::vector<double>(noColumns, 0));
 }
 
-void EDCircles::A_TperB(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                        int _colB)
+void EDCircles::A_TperB(const std::vector<std::vector<double>> &_A,
+                        const std::vector<std::vector<double>> &_B,
+                        std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                        const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _colA; p++)
@@ -3643,12 +3569,12 @@ void EDCircles::A_TperB(double **_A, double **_B, double **_res, int _righA, int
 // Perform the Cholesky decomposition
 // Return the lower triangular L  such that L*L'=A
 //
-void EDCircles::choldc(double **a, int n, double **l)
+void EDCircles::choldc(std::vector<std::vector<double>> &a, const int n,
+                       std::vector<std::vector<double>> &l)
 {
   int i, j, k;
   double sum;
-  double *p = new double[n + 1];
-  memset(p, 0, sizeof(double) * (n + 1));
+  std::vector<double> p(n + 1, 0);
 
   for (i = 1; i <= n; i++)
   {
@@ -3683,21 +3609,27 @@ void EDCircles::choldc(double **a, int n, double **l)
       }
     }  // end-for-inner
   }    // end-for-outer
-
-  delete[] p;
 }
 
-int EDCircles::inverse(double **TB, double **InvB, int N)
+int EDCircles::inverse(const std::vector<std::vector<double>> &TB,
+                       std::vector<std::vector<double>> &InvB, const int N)
 {
   int k, i, j, p, q;
   double mult;
   double D, temp;
   double maxpivot;
   int npivot;
-  double **B = AllocateMatrix(N + 1, N + 2);
-  double **A = AllocateMatrix(N + 1, 2 * N + 2);
-  double **C = AllocateMatrix(N + 1, N + 1);
-  double eps = 10e-20;
+
+  std::vector<std::vector<double>> B;
+  AllocateMatrix(N + 1, N + 2, B);
+
+  std::vector<std::vector<double>> A;
+  AllocateMatrix(N + 1, 2 * N + 2, A);
+
+  std::vector<std::vector<double>> C;
+  AllocateMatrix(N + 1, N + 1, C);
+
+  const double eps = 10e-20;
 
   for (k = 1; k <= N; k++)
     for (j = 1; j <= N; j++) B[k][j] = TB[k][j];
@@ -3740,11 +3672,6 @@ int EDCircles::inverse(double **TB, double **InvB, int N)
     }
     else
     {  // printf("\n The matrix may be singular !!") ;
-
-      DeallocateMatrix(B, N + 1);
-      DeallocateMatrix(A, N + 1);
-      DeallocateMatrix(C, N + 1);
-
       return (-1);
     }  // end-else
   }
@@ -3752,21 +3679,13 @@ int EDCircles::inverse(double **TB, double **InvB, int N)
   for (k = 1, p = 1; k <= N; k++, p++)
     for (j = N + 2, q = 1; j <= 2 * N + 1; j++, q++) InvB[p][q] = A[k][j];
 
-  DeallocateMatrix(B, N + 1);
-  DeallocateMatrix(A, N + 1);
-  DeallocateMatrix(C, N + 1);
-
   return (0);
 }
 
-void EDCircles::DeallocateMatrix(double **m, int noRows)
-{
-  for (int i = 0; i < noRows; i++) delete[] m[i];
-  delete[] m;
-}
-
-void EDCircles::AperB_T(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                        int _colB)
+void EDCircles::AperB_T(const std::vector<std::vector<double>> &_A,
+                        const std::vector<std::vector<double>> &_B,
+                        std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                        const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _colA; p++)
@@ -3777,8 +3696,10 @@ void EDCircles::AperB_T(double **_A, double **_B, double **_res, int _righA, int
     }
 }
 
-void EDCircles::AperB(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                      int _colB)
+void EDCircles::AperB(const std::vector<std::vector<double>> &_A,
+                      const std::vector<std::vector<double>> &_B,
+                      std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                      const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _righA; p++)
@@ -3789,15 +3710,14 @@ void EDCircles::AperB(double **_A, double **_B, double **_res, int _righA, int _
     }
 }
 
-void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot)
+void EDCircles::jacobi(std::vector<std::vector<double>> &a, const int n, std::vector<double> &d,
+                       std::vector<std::vector<double>> &v, int nrot)
 {
   int j, iq, ip, i;
   double tresh, theta, tau, t, sm, s, h, g, c;
 
-  double *b = new double[n + 1];
-  double *z = new double[n + 1];
-  memset(b, 0, sizeof(double) * (n + 1));
-  memset(z, 0, sizeof(double) * (n + 1));
+  std::vector<double> b(n + 1, 0);
+  std::vector<double> z(n + 1, 0);
 
   for (ip = 1; ip <= n; ip++)
   {
@@ -3819,8 +3739,6 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot)
     }
     if (sm == 0.0)
     {
-      delete[] b;
-      delete[] z;
       return;
     }
     if (i < 4)
@@ -3885,11 +3803,10 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot)
     }
   }
   // printf("Too many iterations in routine JACOBI");
-  delete[] b;
-  delete[] z;
 }
 
-void EDCircles::ROTATE(double **a, int i, int j, int k, int l, double tau, double s)
+void EDCircles::ROTATE(std::vector<std::vector<double>> &a, const int i, const int j, const int k,
+                       const int l, const double tau, const double s)
 {
   double g, h;
   g = a[i][j];
