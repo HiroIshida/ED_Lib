@@ -87,7 +87,7 @@ class EDColor
   int height;
 
   double divForTestSegment;
-  double *H;
+  std::vector<double> H;
   int np;
   int segmentNo;
 

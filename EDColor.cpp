@@ -314,8 +314,7 @@ void EDColor::smoothChannel(uchar *src, uchar *smooth, double sigma)
 void EDColor::validateEdgeSegments()
 {
   int maxGradValue = MAX_GRAD_VALUE;
-  H = new double[maxGradValue];
-  memset(H, 0, sizeof(double) * maxGradValue);
+  H.resize(maxGradValue, 0);
 
   memset(edgeImg, 0, width * height);  // clear edge image
 
@@ -323,8 +322,7 @@ void EDColor::validateEdgeSegments()
   gradImg.clear();
   gradImg.resize(width * height, 0);
 
-  int *grads = new int[maxGradValue];
-  memset(grads, 0, sizeof(int) * maxGradValue);
+  std::vector<int> grads(maxGradValue, 0);
 
   for (int i = 1; i < height - 1; i++)
   {
@@ -389,10 +387,6 @@ void EDColor::validateEdgeSegments()
   {
     testSegment(i, 0, segments[i].size() - 1);
   }  // end-for
-
-  // clear space
-  delete[] H;
-  delete[] grads;
 }
 
 //----------------------------------------------------------------------------------

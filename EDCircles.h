@@ -198,37 +198,35 @@ struct AngleSet
 
 struct EDArcs
 {
-  MyArc *arcs;
+  std::vector<MyArc> arcs;
   int noArcs;
 
  public:
   EDArcs(int size = 10000)
   {
-    arcs = new MyArc[size];
+    arcs.resize(size);
     noArcs = 0;
   }  // end-EDArcs
 
-  ~EDArcs() { delete[] arcs; }  // end-~EDArcs
+  ~EDArcs() {}  // end-~EDArcs
 };
 
 //-----------------------------------------------------------------
 // Buffer manager
 struct BufferManager
 {
-  double *x, *y;
+  std::vector<double> x, y;
   int index;
 
   BufferManager(int maxSize)
   {
-    x = new double[maxSize];
-    y = new double[maxSize];
+    x.resize(maxSize, 0);
+    y.resize(maxSize, 0);
     index = 0;
   }  // end-BufferManager
 
   ~BufferManager()
   {
-    delete[] x;
-    delete[] y;
   }  // end-~BufferManager
 
   double *getX() { return &x[index]; }
@@ -303,18 +301,17 @@ class EDCircles : public EDPF
   // ellipse utility functions
   static bool EllipseFit(double *x, double *y, int noPoints, EllipseEquation *pResult,
                          int mode = FPF);
-  static double **AllocateMatrix(int noRows, int noColumns);
-  static void A_TperB(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                      int _colB);
-  static void choldc(double **a, int n, double **l);
-  static int inverse(double **TB, double **InvB, int N);
-  static void DeallocateMatrix(double **m, int noRows);
-  static void AperB_T(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                      int _colB);
-  static void AperB(double **_A, double **_B, double **_res, int _righA, int _colA, int _righB,
-                    int _colB);
-  static void jacobi(double **a, int n, double d[], double **v, int nrot);
-  static void ROTATE(double **a, int i, int j, int k, int l, double tau, double s);
+  static void AllocateMatrix(const int noRows, const int noColumns, std::vector<std::vector<double>> &matrix);
+  static void A_TperB(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
+                      const int _colB);
+  static void choldc(std::vector<std::vector<double>> &a, const int n, std::vector<std::vector<double>> &l);
+  static int inverse(const std::vector<std::vector<double>> &TB, std::vector<std::vector<double>> &InvB, const int N);
+  static void AperB_T(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
+                      const int _colB);
+  static void AperB(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
+                    const int _colB);
+  static void jacobi(std::vector<std::vector<double>> &a, const int n, std::vector<double> &d, std::vector<std::vector<double>> &v, int nrot);
+  static void ROTATE(std::vector<std::vector<double>> &a, const int i, const int j, const int k, const int l, const double tau, const double s);
   static double computeEllipsePerimeter(EllipseEquation *eq);
   static double ComputeEllipseError(EllipseEquation *eq, double *px, double *py, int noPoints);
   static double ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq, double *pxc, double *pyc,
@@ -324,12 +321,12 @@ class EDCircles : public EDPF
                                    int noPoints);
 
   // arc utility functions
-  static void joinLastTwoArcs(MyArc *arcs, int &noArcs);
-  static void addArc(MyArc *arcs, int &noArchs, double xc, double yc, double r,
+  static void joinLastTwoArcs(std::vector<MyArc> &arcs, int &noArcs);
+  static void addArc(std::vector<MyArc> &arcs, int &noArchs, double xc, double yc, double r,
                      double circleFitError,  // Circular arc
                      double sTheta, double eTheta, int turn, int segmentNo, int sx, int sy, int ex,
                      int ey, double *x, double *y, int noPixels, double overlapRatio = 0.0);
-  static void addArc(MyArc *arcs, int &noArchs, double xc, double yc, double r,
+  static void addArc(std::vector<MyArc> &arcs, int &noArchs, double xc, double yc, double r,
                      double circleFitError,  // Elliptic arc
                      double sTheta, double eTheta, int turn, int segmentNo, EllipseEquation *pEq,
                      double ellipseFitError, int sx, int sy, int ex, int ey, double *x, double *y,
@@ -338,7 +335,7 @@ class EDCircles : public EDPF
   static void ComputeStartAndEndAngles(double xc, double yc, double r, double *x, double *y,
                                        int len, double *psTheta, double *peTheta);
 
-  static void sortArc(MyArc *arcs, int noArcs);
+  static void sortArc(std::vector<MyArc> &arcs, int noArcs);
 };
 
 #endif  // ! _EDCIRCLES_
