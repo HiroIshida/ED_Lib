@@ -263,22 +263,22 @@ class EDCircles : public EDPF
   std::vector<mCircle> circles;
   std::vector<mEllipse> ellipses;
 
-  Circle *circles1;
-  Circle *circles2;
-  Circle *circles3;
+  std::vector<Circle> circles1;
+  std::vector<Circle> circles2;
+  std::vector<Circle> circles3;
   int noCircles1;
   int noCircles2;
   int noCircles3;
 
-  EDArcs *edarcs1;
-  EDArcs *edarcs2;
-  EDArcs *edarcs3;
-  EDArcs *edarcs4;
+  std::shared_ptr<EDArcs> edarcs1;
+  std::shared_ptr<EDArcs> edarcs2;
+  std::shared_ptr<EDArcs> edarcs3;
+  std::shared_ptr<EDArcs> edarcs4;
 
-  int *segmentStartLines;
-  BufferManager *bm;
-  Info *info;
-  NFALUT *nfa;
+  std::vector<int> segmentStartLines;
+  std::shared_ptr<BufferManager> bm;
+  std::vector<Info> info;
+  std::shared_ptr<NFALUT> nfa;
 
   void GenerateCandidateCircles();
   void DetectArcs(std::vector<LineSegment> lines);
@@ -289,17 +289,16 @@ class EDCircles : public EDPF
   void JoinArcs3();
 
   // circle utility functions
-  static Circle *addCircle(Circle *circles, int &noCircles, double xc, double yc, double r,
-                           double circleFitError, double *x, double *y, int noPixels);
-  static Circle *addCircle(Circle *circles, int &noCircles, double xc, double yc, double r,
-                           double circleFitError, EllipseEquation *pEq, double ellipseFitError,
-                           double *x, double *y, int noPixels);
-  static void sortCircles(Circle *circles, int noCircles);
+  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
+                        double circleFitError, double *x, double *y, int noPixels);
+  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
+                        double circleFitError, EllipseEquation *pEq, double ellipseFitError,
+                        double *x, double *y, int noPixels);
+  static void sortCircles(std::vector<Circle> &circles, int noCircles);
   static bool CircleFit(double *x, double *y, int N, double *pxc, double *pyc, double *pr,
                         double *pe);
-  static void ComputeCirclePoints(double xc, double yc, double r, double *px, double *py,
-                                  int *noPoints);
-  static void sortCircle(Circle *circles, int noCircles);
+  static void ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px, std::vector<double> &py,
+                                  int &noPoints);
 
   // ellipse utility functions
   static bool EllipseFit(double *x, double *y, int noPoints, EllipseEquation *pResult,
@@ -321,7 +320,7 @@ class EDCircles : public EDPF
   static double ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq, double *pxc, double *pyc,
                                                    double *pmajorAxisLength,
                                                    double *pminorAxisLength);
-  static void ComputeEllipsePoints(double *pvec, double *px, double *py, int noPoints);
+  static void ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py, int noPoints);
 
   // arc utility functions
   static void joinLastTwoArcs(MyArc *arcs, int &noArcs);
