@@ -720,7 +720,7 @@ int EDCircles::getEllipsesNo() { return noEllipses; }
 void EDCircles::GenerateCandidateCircles()
 {
   // Now, go over the circular arcs & add them to circles1
-  auto& arcs = edarcs4->arcs;
+  auto &arcs = edarcs4->arcs;
   for (int i = 0; i < edarcs4->noArcs; i++)
   {
     if (arcs[i].isEllipse)
@@ -1600,7 +1600,7 @@ void EDCircles::JoinArcs1()
   sortArc(edarcs1->arcs, edarcs1->noArcs);
 
   int noArcs = edarcs1->noArcs;
-  auto& arcs = edarcs1->arcs;
+  auto &arcs = edarcs1->arcs;
 
   std::vector<bool> taken(noArcs, false);
 
@@ -1859,7 +1859,7 @@ void EDCircles::JoinArcs2()
   sortArc(edarcs2->arcs, edarcs2->noArcs);
 
   int noArcs = edarcs2->noArcs;
-  auto& arcs = edarcs2->arcs;
+  auto &arcs = edarcs2->arcs;
 
   std::vector<bool> taken(noArcs, false);
 
@@ -2108,7 +2108,7 @@ void EDCircles::JoinArcs3()
   sortArc(edarcs3->arcs, edarcs3->noArcs);
 
   int noArcs = edarcs3->noArcs;
-  auto& arcs = edarcs3->arcs;
+  auto &arcs = edarcs3->arcs;
 
   std::vector<bool> taken(noArcs, false);
 
@@ -3409,30 +3409,30 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints, EllipseEquation *
 
   std::vector<std::vector<double>> S;
   AllocateMatrix(7, 7, S);
-  
+
   std::vector<std::vector<double>> Const;
   AllocateMatrix(7, 7, Const);
-  
+
   std::vector<std::vector<double>> temp;
   AllocateMatrix(7, 7, temp);
-  
+
   std::vector<std::vector<double>> L;
   AllocateMatrix(7, 7, L);
-  
+
   std::vector<std::vector<double>> C;
   AllocateMatrix(7, 7, C);
 
   std::vector<std::vector<double>> invL;
   AllocateMatrix(7, 7, invL);
-  
+
   std::vector<double> d(7, 0);
 
   std::vector<std::vector<double>> V;
   AllocateMatrix(7, 7, V);
-  
+
   std::vector<std::vector<double>> sol;
   AllocateMatrix(7, 7, sol);
-  
+
   double tx, ty;
   int nrot = 0;
 
@@ -3544,14 +3544,17 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints, EllipseEquation *
   return valid;
 }
 
-void EDCircles::AllocateMatrix(const int noRows, const int noColumns, std::vector<std::vector<double>> &matrix)
+void EDCircles::AllocateMatrix(const int noRows, const int noColumns,
+                               std::vector<std::vector<double>> &matrix)
 {
   matrix.clear();
   matrix.resize(noRows, std::vector<double>(noColumns, 0));
 }
 
-void EDCircles::A_TperB(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
-                        const int _colB)
+void EDCircles::A_TperB(const std::vector<std::vector<double>> &_A,
+                        const std::vector<std::vector<double>> &_B,
+                        std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                        const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _colA; p++)
@@ -3566,7 +3569,8 @@ void EDCircles::A_TperB(const std::vector<std::vector<double>> &_A, const std::v
 // Perform the Cholesky decomposition
 // Return the lower triangular L  such that L*L'=A
 //
-void EDCircles::choldc(std::vector<std::vector<double>> &a, const int n, std::vector<std::vector<double>> &l)
+void EDCircles::choldc(std::vector<std::vector<double>> &a, const int n,
+                       std::vector<std::vector<double>> &l)
 {
   int i, j, k;
   double sum;
@@ -3607,7 +3611,8 @@ void EDCircles::choldc(std::vector<std::vector<double>> &a, const int n, std::ve
   }    // end-for-outer
 }
 
-int EDCircles::inverse(const std::vector<std::vector<double>> &TB, std::vector<std::vector<double>> &InvB, const int N)
+int EDCircles::inverse(const std::vector<std::vector<double>> &TB,
+                       std::vector<std::vector<double>> &InvB, const int N)
 {
   int k, i, j, p, q;
   double mult;
@@ -3617,10 +3622,10 @@ int EDCircles::inverse(const std::vector<std::vector<double>> &TB, std::vector<s
 
   std::vector<std::vector<double>> B;
   AllocateMatrix(N + 1, N + 2, B);
-  
+
   std::vector<std::vector<double>> A;
   AllocateMatrix(N + 1, 2 * N + 2, A);
-  
+
   std::vector<std::vector<double>> C;
   AllocateMatrix(N + 1, N + 1, C);
 
@@ -3677,8 +3682,10 @@ int EDCircles::inverse(const std::vector<std::vector<double>> &TB, std::vector<s
   return (0);
 }
 
-void EDCircles::AperB_T(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
-                        const int _colB)
+void EDCircles::AperB_T(const std::vector<std::vector<double>> &_A,
+                        const std::vector<std::vector<double>> &_B,
+                        std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                        const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _colA; p++)
@@ -3689,8 +3696,10 @@ void EDCircles::AperB_T(const std::vector<std::vector<double>> &_A, const std::v
     }
 }
 
-void EDCircles::AperB(const std::vector<std::vector<double>> &_A, const std::vector<std::vector<double>> &_B, std::vector<std::vector<double>> &_res, const int _righA, const int _colA, const int _righB,
-                      const int _colB)
+void EDCircles::AperB(const std::vector<std::vector<double>> &_A,
+                      const std::vector<std::vector<double>> &_B,
+                      std::vector<std::vector<double>> &_res, const int _righA, const int _colA,
+                      const int _righB, const int _colB)
 {
   int p, q, l;
   for (p = 1; p <= _righA; p++)
@@ -3701,7 +3710,8 @@ void EDCircles::AperB(const std::vector<std::vector<double>> &_A, const std::vec
     }
 }
 
-void EDCircles::jacobi(std::vector<std::vector<double>> &a, const int n, std::vector<double> &d, std::vector<std::vector<double>> &v, int nrot)
+void EDCircles::jacobi(std::vector<std::vector<double>> &a, const int n, std::vector<double> &d,
+                       std::vector<std::vector<double>> &v, int nrot)
 {
   int j, iq, ip, i;
   double tresh, theta, tau, t, sm, s, h, g, c;
@@ -3795,7 +3805,8 @@ void EDCircles::jacobi(std::vector<std::vector<double>> &a, const int n, std::ve
   // printf("Too many iterations in routine JACOBI");
 }
 
-void EDCircles::ROTATE(std::vector<std::vector<double>> &a, const int i, const int j, const int k, const int l, const double tau, const double s)
+void EDCircles::ROTATE(std::vector<std::vector<double>> &a, const int i, const int j, const int k,
+                       const int l, const double tau, const double s)
 {
   double g, h;
   g = a[i][j];
