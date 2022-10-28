@@ -101,16 +101,17 @@ class ED
   void ComputeAnchorPoints();
   void JoinAnchorPointsUsingSortedAnchors();
   void sortAnchorsByGradValue();
-  int *sortAnchorsByGradValue1();
+  void sortAnchorsByGradValue1(std::vector<int> &A);
 
-  static int LongestChain(Chain *chains, int root);
-  static int RetrieveChainNos(Chain *chains, int root, int chainNos[]);
+  static int LongestChain(std::vector<Chain> &chains, int root);
+  static int RetrieveChainNos(std::vector<Chain> &chains, int root, std::vector<int> &chainNos);
 
   int anchorNos;
   std::vector<cv::Point> anchorPoints;
   std::vector<cv::Point> edgePoints;
 
   cv::Mat edgeImage;
+  cv::Mat dirImage;
   cv::Mat gradImage;
 
   uchar *dirImg;   // pointer to direction image data
