@@ -97,14 +97,14 @@ class EDLines : public ED
   double max_distance_between_two_lines;
   double max_error;
   double prec;
-  NFALUT *nfa;
+  std::shared_ptr<NFALUT> nfa;
 
   int ComputeMinLineLength();
   void SplitSegment2Lines(double *x, double *y, int noPixels, int segmentNo);
   void JoinCollinearLines();
 
   void ValidateLineSegments();
-  bool ValidateLineSegmentRect(int *x, int *y, LineSegment *ls);
+  bool ValidateLineSegmentRect(std::vector<int> &x, std::vector<int> &y, LineSegment *ls);
   bool TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2, int changeIndex);
 
   static double ComputeMinDistance(double x1, double y1, double a, double b, int invert);
@@ -115,8 +115,8 @@ class EDLines : public ED
                       int &invert);
   static double ComputeMinDistanceBetweenTwoLines(LineSegment *ls1, LineSegment *ls2, int *pwhich);
   static void UpdateLineParameters(LineSegment *ls);
-  static void EnumerateRectPoints(double sx, double sy, double ex, double ey, int ptsx[],
-                                  int ptsy[], int *pNoPoints);
+  static void EnumerateRectPoints(double sx, double sy, double ex, double ey, std::vector<int> &ptsx,
+                                  std::vector<int> &ptsy, int *pNoPoints);
 
   // Utility math functions
 };
