@@ -5,7 +5,7 @@
 NFALUT::NFALUT(int size, double _prob, double _logNT)
 {
   LUTSize = size;
-  LUT = new int[LUTSize];
+  LUT.resize(size, 0);
 
   prob = _prob;
   logNT = _logNT;
@@ -32,7 +32,7 @@ NFALUT::NFALUT(int size, double _prob, double _logNT)
   }  // end-for
 }
 
-NFALUT::~NFALUT() { delete[] LUT; }
+NFALUT::~NFALUT() {}
 
 bool NFALUT::checkValidationByNFA(int n, int k)
 {
