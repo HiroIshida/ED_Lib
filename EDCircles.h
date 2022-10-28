@@ -289,16 +289,16 @@ class EDCircles : public EDPF
   void JoinArcs3();
 
   // circle utility functions
-  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
-                        double circleFitError, double *x, double *y, int noPixels);
-  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
-                        double circleFitError, EllipseEquation *pEq, double ellipseFitError,
-                        double *x, double *y, int noPixels);
+  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                        double r, double circleFitError, double *x, double *y, int noPixels);
+  static void addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                        double r, double circleFitError, EllipseEquation *pEq,
+                        double ellipseFitError, double *x, double *y, int noPixels);
   static void sortCircles(std::vector<Circle> &circles, int noCircles);
   static bool CircleFit(double *x, double *y, int N, double *pxc, double *pyc, double *pr,
                         double *pe);
-  static void ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px, std::vector<double> &py,
-                                  int &noPoints);
+  static void ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px,
+                                  std::vector<double> &py, int &noPoints);
 
   // ellipse utility functions
   static bool EllipseFit(double *x, double *y, int noPoints, EllipseEquation *pResult,
@@ -320,7 +320,8 @@ class EDCircles : public EDPF
   static double ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq, double *pxc, double *pyc,
                                                    double *pmajorAxisLength,
                                                    double *pminorAxisLength);
-  static void ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py, int noPoints);
+  static void ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py,
+                                   int noPoints);
 
   // arc utility functions
   static void joinLastTwoArcs(MyArc *arcs, int &noArcs);

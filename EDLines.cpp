@@ -87,7 +87,7 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   // Temporary buffers used during line fitting
   std::vector<double> x((width + height) * 8, 0);
   std::vector<double> y((width + height) * 8, 0);
-  
+
   linesNo = 0;
 
   // Use the whole segment
@@ -1038,8 +1038,8 @@ void EDLines::UpdateLineParameters(LineSegment *ls)
   }    // end-else
 }
 
-void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey, std::vector<int> &ptsx,
-                                  std::vector<int> &ptsy, int *pNoPoints)
+void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
+                                  std::vector<int> &ptsx, std::vector<int> &ptsy, int *pNoPoints)
 {
   double vxTmp[4], vyTmp[4];
   double vx[4], vy[4];

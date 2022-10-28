@@ -115,8 +115,8 @@ class EDLines : public ED
                       int &invert);
   static double ComputeMinDistanceBetweenTwoLines(LineSegment *ls1, LineSegment *ls2, int *pwhich);
   static void UpdateLineParameters(LineSegment *ls);
-  static void EnumerateRectPoints(double sx, double sy, double ex, double ey, std::vector<int> &ptsx,
-                                  std::vector<int> &ptsy, int *pNoPoints);
+  static void EnumerateRectPoints(double sx, double sy, double ex, double ey,
+                                  std::vector<int> &ptsx, std::vector<int> &ptsy, int *pNoPoints);
 
   // Utility math functions
 };

@@ -2375,8 +2375,8 @@ void EDCircles::JoinArcs3()
   }    // end-for
 }
 
-void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
-                          double circleFitError, double *x, double *y, int noPixels)
+void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                          double r, double circleFitError, double *x, double *y, int noPixels)
 {
   circles[noCircles].xc = xc;
   circles[noCircles].yc = yc;
@@ -2393,9 +2393,9 @@ void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double x
   noCircles++;
 }
 
-void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc, double r,
-                          double circleFitError, EllipseEquation *pEq, double ellipseFitError,
-                          double *x, double *y, int noPixels)
+void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double xc, double yc,
+                          double r, double circleFitError, EllipseEquation *pEq,
+                          double ellipseFitError, double *x, double *y, int noPixels)
 {
   circles[noCircles].xc = xc;
   circles[noCircles].yc = yc;
@@ -2412,7 +2412,6 @@ void EDCircles::addCircle(std::vector<Circle> &circles, int &noCircles, double x
   circles[noCircles].isEllipse = true;
 
   noCircles++;
-
 }
 
 void EDCircles::sortCircles(std::vector<Circle> &circles, int noCircles)
@@ -2829,7 +2828,8 @@ double EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq, double
 // on the ellipse periferi. These points can be used to draw the ellipse
 // noPoints must be an even number.
 //
-void EDCircles::ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py, int noPoints)
+void EDCircles::ComputeEllipsePoints(double *pvec, std::vector<double> &px, std::vector<double> &py,
+                                     int noPoints)
 {
   if (noPoints % 2) noPoints--;
   int npts = noPoints / 2;
@@ -3366,8 +3366,8 @@ bool EDCircles::CircleFit(double *x, double *y, int N, double *pxc, double *pyc,
 //------------------------------------------------------------------------------------
 // Computes the points making up a circle
 //
-void EDCircles::ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px, std::vector<double> &py,
-                                    int &noPoints)
+void EDCircles::ComputeCirclePoints(double xc, double yc, double r, std::vector<double> &px,
+                                    std::vector<double> &py, int &noPoints)
 {
   int len = (int)(TWOPI * r + 0.5);
   double angleInc = TWOPI / len;

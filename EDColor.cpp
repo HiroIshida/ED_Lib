@@ -59,7 +59,8 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   if (validateSegments)
   {
     // Get Edge Image using ED
-    ED edgeObj = ED(&gradImg[0], &dirImg[0], width, height, gradThresh, anchor_thresh, 1, 10, false);
+    ED edgeObj =
+        ED(&gradImg[0], &dirImg[0], width, height, gradThresh, anchor_thresh, 1, 10, false);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
 
