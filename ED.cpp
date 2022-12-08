@@ -268,6 +268,29 @@ Mat ED::drawParticularSegments(std::vector<int> list)
 
 void ED::ComputeGradient()
 {
+  const cv::Mat kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
+  cv::Mat gxImageSigned, gyImageSigned;
+  cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t());
+  cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel);
+  cv::Mat gxImage = cv::abs(gxImageSigned);
+  cv::Mat gyImage = cv::abs(gyImageSigned);
+  gradImage = gxImage + gyImage;
+  gradImage.col(0).setTo(gradThresh - 1);
+  gradImage.col(gradImage.cols - 1).setTo(gradThresh - 1);
+  gradImage.row(0).setTo(gradThresh - 1);
+  gradImage.row(gradImage.rows - 1).setTo(gradThresh - 1);
+  dirImage = cv::Mat::zeros(gradImage.rows, gradImage.cols, CV_8UC1);
+  const cv::Mat maskThresh = gradImage >= gradThresh;
+  cv::Mat maskVertical, maskHorizontal;
+  cv::bitwise_and(maskThresh, gxImage >= gyImage, maskVertical);
+  cv::bitwise_and(maskThresh, gxImage < gyImage, maskHorizontal);
+  dirImage.setTo(EDGE_VERTICAL, maskVertical);
+  dirImage.setTo(EDGE_HORIZONTAL, maskHorizontal);
+}
+
+/*
+void ED::ComputeGradient()
+{
   // Initialize gradient image for row = 0, row = height-1, column=0, column=width-1
   for (int j = 0; j < width; j++)
   {
@@ -370,7 +393,7 @@ void ED::ComputeGradient()
     }    // end-for
   }      // end-for
 }
-
+*/
 void ED::ComputeAnchorPoints()
 {
   // memset(edgeImg, 0, width*height);
