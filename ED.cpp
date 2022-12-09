@@ -26,10 +26,10 @@ void ED::prealloc(const int _width, const int _height)
   dirImage = Mat(height, width, CV_8UC1);
   gradImage = Mat(height, width, CV_16SC1);  // gradImage contains short values
 
-  chainNos.reserve((width + height) * 8);
-  pixels.reserve(width * height);
-  stack.reserve(width * height);
-  chains.reserve(width * height);
+  chainNos.resize((width + height) * 8);
+  pixels.resize(width * height);
+  stack.resize(width * height);
+  chains.resize(width * height);
 }
 
 void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
@@ -99,6 +99,7 @@ ED::ED(const ED &cpyObj)
 {
   height = cpyObj.height;
   width = cpyObj.width;
+  prealloc(width, height);
 
   srcImage = cpyObj.srcImage.clone();
 
@@ -132,6 +133,8 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
 {
   height = _height;
   width = _width;
+
+  prealloc(width, height);
 
   gradThresh = _gradThresh;
   anchorThresh = _anchorThresh;
@@ -231,6 +234,7 @@ ED::ED(EDColor &obj)
 {
   width = obj.getWidth();
   height = obj.getHeight();
+  prealloc(width, height);
   segmentPoints = obj.getSegments();
 }
 
@@ -449,10 +453,6 @@ void ED::ComputeAnchorPoints()
 void ED::JoinAnchorPointsUsingSortedAnchors()
 {
   const auto start_tick = getTickCount();
-  chainNos.resize((width + height) * 8);
-  pixels.resize(width * height);
-  stack.resize(width * height);
-  chains.resize(width * height);
   segmentPoints.clear();
   segmentPoints.push_back(vector<Point>());
   const auto alloc_tick = getTickCount();
@@ -1109,11 +1109,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
   // pop back last segment from vector
   // because of one preallocation in the beginning, it will always empty
   segmentPoints.pop_back();
-
-  chainNos.clear();
-  pixels.clear();
-  stack.clear();
-  chains.clear();
 }
 
 void ED::sortAnchorsByGradValue()
