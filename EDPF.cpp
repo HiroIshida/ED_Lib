@@ -28,8 +28,6 @@ void EDPF::validateEdgeSegments()
   divForTestSegment = 2.25;            // Some magic number :-)
   memset(edgeImg, 0, width * height);  // clear edge image
 
-  H.resize(MAX_GRAD_VALUE, 0);
-
   ComputePrewitt3x3(gradImg);
 
   // Compute np: # of segment pieces
@@ -65,47 +63,31 @@ void EDPF::validateEdgeSegments()
 
 void EDPF::ComputePrewitt3x3(std::vector<short> &img)
 {
-  img.clear();
   img.resize(width * height, 0);
+  auto image = cv::Mat_(height, width, &img[0]);
+  
+  const cv::Mat kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
+  cv::Mat gxImageSigned, gyImageSigned;
+  cv::filter2D(srcImage, gxImageSigned, CV_16SC1, kernel.t());
+  cv::filter2D(srcImage, gyImageSigned, CV_16SC1, kernel);
+  image = cv::abs(gxImageSigned) + cv::abs(gyImageSigned);
+  image.col(0).setTo(0);
+  image.col(image.cols - 1).setTo(0);
+  image.row(0).setTo(0);
+  image.row(image.rows - 1).setTo(0);
 
-  std::vector<int> grads(MAX_GRAD_VALUE, 0);
-
-  for (int i = 1; i < height - 1; i++)
-  {
-    for (int j = 1; j < width - 1; j++)
-    {
-      // Prewitt Operator in horizontal and vertical direction
-      // A B C
-      // D x E
-      // F G H
-      // gx = (C-A) + (E-D) + (H-F)
-      // gy = (F-A) + (G-B) + (H-C)
-      //
-      // To make this faster:
-      // com1 = (H-A)
-      // com2 = (C-F)
-      // Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
-      //       gy = com1 - com2 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-      //
-      int com1 = srcImg[(i + 1) * width + j + 1] - srcImg[(i - 1) * width + j - 1];
-      int com2 = srcImg[(i - 1) * width + j + 1] - srcImg[(i + 1) * width + j - 1];
-
-      int gx = abs(com1 + com2 + (srcImg[i * width + j + 1] - srcImg[i * width + j - 1]));
-      int gy = abs(com1 - com2 + (srcImg[(i + 1) * width + j] - srcImg[(i - 1) * width + j]));
-
-      int g = gx + gy;
-
-      img[i * width + j] = g;
-      grads[g]++;
-    }  // end-for
-  }    // end-for
+  double max_grad_value = static_cast<double>(MAX_GRAD_VALUE);
+  cv::minMaxLoc(image, nullptr, &max_grad_value);
+  std::vector<int> grads(static_cast<int>(max_grad_value) + 1, 0);
+  for (int i = 0; i < img.size(); ++i) grads[img[i]]++;
 
   // Compute probability function H
-  int size = (width - 2) * (height - 2);
+  const int size = (width - 2) * (height - 2);
+  
+  for (int i = grads.size() - 1; i > 0; i--) grads[i - 1] += grads[i];
 
-  for (int i = MAX_GRAD_VALUE - 1; i > 0; i--) grads[i - 1] += grads[i];
-
-  for (int i = 0; i < MAX_GRAD_VALUE; i++) H[i] = (double)grads[i] / ((double)size);
+  H.resize(grads.size(), 0);
+  for (int i = 0; i < grads.size(); i++) H[i] = (double)grads[i] / ((double)size);
 }
 
 //----------------------------------------------------------------------------------
