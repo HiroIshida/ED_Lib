@@ -60,6 +60,19 @@ struct Chain
 class ED
 {
  public:
+
+  struct Profile
+  {
+    double initialize;
+    double gaussian_blur;
+    double compute_gradient;
+    double compute_anchor_points;
+    double join_anchor_points_using_sorted_anchors;
+    // in JoinAnchorPointsUsingSortedAnchors method
+    double join_anchor_points_alloc;
+    double sort_anchors_by_grad_value;
+  };
+  
   ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
      int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
      bool _sumFlag = true);
@@ -83,6 +96,8 @@ class ED
 
   cv::Mat drawParticularSegments(std::vector<int> list);
 
+  Profile getLastEDProfile() const;
+
  protected:
   int width;   // width of source image
   int height;  // height of source image
@@ -95,6 +110,7 @@ class ED
   int segmentNos;
   int minPathLen;
   cv::Mat srcImage;
+  Profile lastEDProfile;
 
  private:
   void ComputeGradient();

@@ -25,15 +25,25 @@
 class EDPF : public ED
 {
  public:
+
+  struct Profile
+  {
+    double gaussian_blur;
+    double validate_edge_segments;
+  };
+  
   EDPF(cv::Mat srcImage);
   EDPF(ED obj);
   EDPF(EDColor obj);
+
+  Profile getLastEDPFProfile() const;
 
  private:
   double divForTestSegment;
   std::vector<double> H;
   int np;
   std::vector<short> gradImg;
+  Profile lastEDPFProfile;
 
   void validateEdgeSegments();
   void ComputePrewitt3x3(

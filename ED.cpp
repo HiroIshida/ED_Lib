@@ -8,6 +8,7 @@ using namespace std;
 ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
        int _minPathLen, double _sigma, bool _sumFlag)
 {
+  const auto start_tick = getTickCount();
   // Check parameters for sanity
   if (_gradThresh < 1) _gradThresh = 1;
   if (_anchorThresh < 0) _anchorThresh = 0;
@@ -35,7 +36,9 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
   gradImage = Mat(height, width, CV_16SC1);  // gradImage contains short values
 
   srcImg = srcImage.data;
-
+  const auto initialize_tick = getTickCount();
+  lastEDProfile.initialize = (initialize_tick - start_tick) / getTickFrequency();
+  
   //// Detect Edges By Edge Drawing Algorithm  ////
 
   /*------------ SMOOTH THE IMAGE BY A GAUSSIAN KERNEL -------------------*/
@@ -43,6 +46,8 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
     GaussianBlur(srcImage, smoothImage, Size(5, 5), sigma);
   else
     GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
+  const auto gaussian_blur_tick = getTickCount();
+  lastEDProfile.gaussian_blur = (gaussian_blur_tick - initialize_tick) / getTickFrequency();
 
   // Assign Pointers from Mat's data
   smoothImg = smoothImage.data;
@@ -52,12 +57,19 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
 
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
   ComputeGradient();
+  const auto compute_gradient_tick = getTickCount();
+  lastEDProfile.compute_gradient = (compute_gradient_tick - gaussian_blur_tick) / getTickFrequency();
 
   /*------------ COMPUTE ANCHORS -------------------*/
   ComputeAnchorPoints();
+  const auto compute_anchor_points_tick = getTickCount();
+  lastEDProfile.compute_anchor_points = (compute_anchor_points_tick - compute_gradient_tick) / getTickFrequency();
 
   /*------------ JOIN ANCHORS -------------------*/
   JoinAnchorPointsUsingSortedAnchors();
+  const auto join_anchor_points_using_sorted_anchors_tick = getTickCount();
+  lastEDProfile.join_anchor_points_using_sorted_anchors =
+    (join_anchor_points_using_sorted_anchors_tick - compute_anchor_points_tick) / getTickFrequency();
 }
 
 // This constructor for use of EDLines and EDCircle with ED given as constructor argument
@@ -266,6 +278,8 @@ Mat ED::drawParticularSegments(std::vector<int> list)
   return segmentsImage;
 }
 
+ED::Profile ED::getLastEDProfile() const { return lastEDProfile; }
+
 void ED::ComputeGradient()
 {
   // Initialize gradient image for row = 0, row = height-1, column=0, column=width-1
@@ -418,14 +432,19 @@ void ED::ComputeAnchorPoints()
 
 void ED::JoinAnchorPointsUsingSortedAnchors()
 {
+  const auto start_tick = getTickCount();
   std::vector<int> chainNos((width + height) * 8);
   std::vector<Point> pixels(width * height);
   std::vector<StackNode> stack(width * height);
   std::vector<Chain> chains(width * height);
+  const auto alloc_tick = getTickCount();
+  lastEDProfile.join_anchor_points_alloc = (alloc_tick - start_tick) / getTickFrequency();
 
   // sort the anchor points by their gradient value in decreasing order
   std::vector<int> A;
   sortAnchorsByGradValue1(A);
+  const auto sort_anchors_by_grad_value_tick = getTickCount();
+  lastEDProfile.sort_anchors_by_grad_value = (sort_anchors_by_grad_value_tick - alloc_tick) / getTickFrequency();
 
   // Now join the anchors starting with the anchor having the greatest gradient value
   int totalPixels = 0;

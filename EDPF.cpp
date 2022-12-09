@@ -6,10 +6,15 @@ using namespace std;
 EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
 {
   // Validate Edge Segments
+  const auto start_tick = getTickCount();
   sigma /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
+  const auto gaussian_blur_tick = getTickCount();
+  lastEDPFProfile.gaussian_blur = (gaussian_blur_tick - start_tick) / getTickFrequency();
 
   validateEdgeSegments();
+  const auto validate_edge_segments_tick = getTickCount();
+  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
 }
 
 EDPF::EDPF(ED obj) : ED(obj)
@@ -245,3 +250,5 @@ double EDPF::NFA(double prob, int len)
 
   return nfa;
 }
+
+EDPF::Profile EDPF::getLastEDPFProfile() const { return lastEDPFProfile; }
