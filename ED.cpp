@@ -55,8 +55,6 @@ void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anch
   sigma = _sigma;
   sumFlag = _sumFlag;
 
-  segmentNos = 0;
-
   srcImg = srcImage.data;
   const auto initialize_tick = getTickCount();
   lastEDProfile.initialize = (initialize_tick - start_tick) / getTickFrequency();
@@ -75,6 +73,7 @@ void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anch
   smoothImg = smoothImage.data;
   dirImg = dirImage.data;
   gradImg = (short *)gradImage.data;
+  edgeImage.setTo(cv::Scalar(0));
   edgeImg = edgeImage.data;
 
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
@@ -124,7 +123,6 @@ ED::ED(const ED &cpyObj)
   edgeImg = edgeImage.data;
 
   segmentPoints = cpyObj.segmentPoints;
-  segmentNos = cpyObj.segmentNos;
 }
 
 // This constructor for use of EDColor with use of direction and gradient image
@@ -215,8 +213,6 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
         int x = i % width;
         anchorPoints.push_back(Point(x, y));  // push validated anchor point to vector
       }
-
-    anchorNos = anchorPoints.size();  // get # of anchor pixels
   }
 
   else
@@ -226,7 +222,6 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
                             // stable anchors.)
   }                         // end-else
 
-  segmentNos = 0;
   segmentPoints.push_back(vector<Point>());  // create empty vector of points for segments
 
   JoinAnchorPointsUsingSortedAnchors();
@@ -237,7 +232,6 @@ ED::ED(EDColor &obj)
   width = obj.getWidth();
   height = obj.getHeight();
   segmentPoints = obj.getSegments();
-  segmentNos = obj.getSegmentNo();
 }
 
 ED::ED()
@@ -268,9 +262,11 @@ Mat ED::getGradImage()
   return result8UC1;
 }
 
-int ED::getSegmentNo() { return segmentNos; }
+Mat ED::getDirImage() { return dirImage; }
 
-int ED::getAnchorNo() { return anchorNos; }
+int ED::getSegmentNo() { return segmentPoints.size(); }
+
+int ED::getAnchorNo() { return anchorPoints.size(); }
 
 std::vector<Point> ED::getAnchorPoints() { return anchorPoints; }
 
@@ -409,7 +405,7 @@ void ED::ComputeGradient()
 
 void ED::ComputeAnchorPoints()
 {
-  // memset(edgeImg, 0, width*height);
+  anchorPoints.clear();
   for (int i = 2; i < height - 2; i++)
   {
     int start = 2;
@@ -448,8 +444,6 @@ void ED::ComputeAnchorPoints()
       }  // end-else
     }    // end-for-inner
   }      // end-for-outer
-
-  anchorNos = anchorPoints.size();  // get the total number of anchor points
 }
 
 void ED::JoinAnchorPointsUsingSortedAnchors()
@@ -472,8 +466,9 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 
   // Now join the anchors starting with the anchor having the greatest gradient value
   int totalPixels = 0;
+  int segmentNos = 0;
 
-  for (int k = anchorNos - 1; k >= 0; k--)
+  for (int k = anchorPoints.size() - 1; k >= 0; k--)
   {
     int pixelOffset = A[k];
 
@@ -1142,7 +1137,7 @@ void ED::sortAnchorsByGradValue()
   myFile.close();
 
 
-  vector<Point> temp(anchorNos);
+  vector<Point> temp(anchorPoints.size());
 
   int x, y, i = 0;
   char c;

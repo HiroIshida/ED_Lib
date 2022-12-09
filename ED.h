@@ -96,6 +96,7 @@ class ED
   cv::Mat getAnchorImage();
   cv::Mat getSmoothImage();
   cv::Mat getGradImage();
+  cv::Mat getDirImage();
 
   int getSegmentNo();
   int getAnchorNo();
@@ -117,7 +118,6 @@ class ED
   cv::Mat smoothImage;
   uchar *edgeImg;    // pointer to edge image data
   uchar *smoothImg;  // pointer to smoothed image data
-  int segmentNos;
   int minPathLen;
   cv::Mat srcImage;
   Profile lastEDProfile;
@@ -132,9 +132,7 @@ class ED
   static int LongestChain(std::vector<Chain> &chains, int root);
   static int RetrieveChainNos(std::vector<Chain> &chains, int root, std::vector<int> &chainNos);
 
-  int anchorNos;
   std::vector<cv::Point> anchorPoints;
-  std::vector<cv::Point> edgePoints;
 
   cv::Mat edgeImage;
   cv::Mat dirImage;

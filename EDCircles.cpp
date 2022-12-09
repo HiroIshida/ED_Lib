@@ -16,14 +16,14 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines.resize(segmentNos + 1, 0);
+  segmentStartLines.resize(getSegmentNo() + 1, 0);
 
   bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
@@ -106,14 +106,14 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage)
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[getSegmentNo()] = lines.size();
 
   // ------------------------------- DETECT ARCS ---------------------------------
 
   info.resize(lines.size());
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++)
     {
@@ -241,14 +241,14 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines.resize(segmentNos + 1, 0);
+  segmentStartLines.resize(getSegmentNo() + 1, 0);
 
   bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
@@ -331,13 +331,13 @@ EDCircles::EDCircles(ED obj) : EDPF(obj)
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[getSegmentNo()] = lines.size();
 
   // ------------------------------- DETECT ARCS ---------------------------------
   info.resize(lines.size());
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++)
     {
@@ -465,14 +465,14 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
   for (int i = 0; i < segmentPoints.size(); i++) bufferSize += segmentPoints[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines.resize(segmentNos + 1, 0);
+  segmentStartLines.resize(getSegmentNo() + 1, 0);
 
   bm = std::make_shared<BufferManager>(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
@@ -555,14 +555,14 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj)
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[getSegmentNo()] = lines.size();
 
   // ------------------------------- DETECT ARCS ---------------------------------
 
   info.resize(lines.size());
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++)
     {
@@ -800,7 +800,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines)
       MAX_ANGLE = PI / 1.9;  // 95 degrees
                              //    if (iter == 2) MAX_ANGLE = PI/2.25;  // 80 degrees
 
-    for (int curSegmentNo = 0; curSegmentNo < segmentNos; curSegmentNo++)
+    for (int curSegmentNo = 0; curSegmentNo < getSegmentNo(); curSegmentNo++)
     {
       int firstLine = segmentStartLines[curSegmentNo];
       int stopLine = segmentStartLines[curSegmentNo + 1];

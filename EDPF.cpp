@@ -78,7 +78,7 @@ void EDPF::validateEdgeSegments()
   // Does this underestimate the number of pieces of edge segments?
   // What's the correct value?
   np = 0;
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     int len = segmentPoints[i].size();
     np += (len * (len - 1)) / 2;
@@ -88,7 +88,7 @@ void EDPF::validateEdgeSegments()
 #elif 0
   // This definitely overestimates the number of pieces of edge segments
   int np = 0;
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     np += segmentPoints[i].size();
   }  // end-for
@@ -96,7 +96,7 @@ void EDPF::validateEdgeSegments()
 #endif
 
   // Validate segments
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     TestSegment(i, 0, segmentPoints[i].size() - 1);
   }  // end-for
@@ -226,11 +226,11 @@ void EDPF::TestSegment(int i, int index1, int index2)
 //
 void EDPF::ExtractNewSegments()
 {
-  // vector<Point> *segments = &segmentPoints[segmentNos];
+  // vector<Point> *segments = &segmentPoints[getSegmentNo()];
   vector<vector<Point> > validSegments;
   int noSegments = 0;
 
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     int start = 0;
     while (start < segmentPoints[i].size())
@@ -272,8 +272,6 @@ void EDPF::ExtractNewSegments()
 
   // Copy to ed
   segmentPoints = validSegments;
-
-  segmentNos = noSegments;
 }
 
 //---------------------------------------------------------------------------
