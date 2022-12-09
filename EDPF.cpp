@@ -3,6 +3,12 @@
 using namespace cv;
 using namespace std;
 
+EDPF::EDPF(const int _width, const int _height)
+: ED(_width, _height)
+{
+  prealloc();
+}
+/*
 EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
 {
   // Validate Edge Segments
@@ -16,7 +22,12 @@ EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
   const auto validate_edge_segments_tick = getTickCount();
   lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
 }
-
+*/
+EDPF::EDPF(Mat srcImage) : ED(srcImage.cols, srcImage.rows)
+{
+  prealloc();
+  process(srcImage);
+}
 EDPF::EDPF(ED obj) : ED(obj)
 {
   // Validate Edge Segments
@@ -28,13 +39,38 @@ EDPF::EDPF(ED obj) : ED(obj)
 
 EDPF::EDPF(EDColor obj) : ED(obj) {}
 
+void EDPF::prealloc()
+{
+  H.reserve(MAX_GRAD_VALUE);
+  gradImg.reserve(width * height);
+}
+
+void EDPF::process(cv::Mat _srcImage)
+{
+  ED::process(_srcImage, PREWITT_OPERATOR, 11, 3);
+  
+  // Validate Edge Segments
+  const auto start_tick = getTickCount();
+  sigma /= 2.5;
+  GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
+  const auto gaussian_blur_tick = getTickCount();
+  lastEDPFProfile.gaussian_blur = (gaussian_blur_tick - start_tick) / getTickFrequency();
+
+  validateEdgeSegments();
+  const auto validate_edge_segments_tick = getTickCount();
+  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
+}
+
 void EDPF::validateEdgeSegments()
 {
   divForTestSegment = 2.25;            // Some magic number :-)
   memset(edgeImg, 0, width * height);  // clear edge image
 
+  H.clear();
   H.resize(MAX_GRAD_VALUE, 0);
 
+  gradImg.clear();
+  gradImg.resize(width * height, 0);
   ComputePrewitt3x3(gradImg);
 
   // Compute np: # of segment pieces

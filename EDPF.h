@@ -31,10 +31,14 @@ class EDPF : public ED
     double gaussian_blur;
     double validate_edge_segments;
   };
-  
+
+  EDPF(const int _width, const int _height);
   EDPF(cv::Mat srcImage);
   EDPF(ED obj);
   EDPF(EDColor obj);
+
+  void prealloc();
+  void process(cv::Mat _srcImage);
 
   Profile getLastEDPFProfile() const;
 

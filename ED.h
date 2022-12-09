@@ -72,7 +72,8 @@ class ED
     double join_anchor_points_alloc;
     double sort_anchors_by_grad_value;
   };
-  
+
+  ED(const int _width, const int _height);
   ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
      int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
      bool _sumFlag = true);
@@ -81,6 +82,15 @@ class ED
      int _scanInterval = 1, int _minPathLen = 10, bool selectStableAnchors = true);
   ED(EDColor &cpyObj);
   ED();
+
+  void prealloc(const int _width, const int _height);
+
+  void process(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
+     int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
+     bool _sumFlag = true);
+  int getWidth() const { return width; }
+  int getHeight() const { return height; }
+  
 
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();
@@ -138,6 +148,12 @@ class ED
   int anchorThresh;     // anchor point threshold
   int scanInterval;
   bool sumFlag;
+
+  // cached data used in JoinAnchorPointsUsingSortedAnchors
+  std::vector<int> chainNos;
+  std::vector<cv::Point> pixels;
+  std::vector<StackNode> stack;
+  std::vector<Chain> chains;
 };
 
 #endif

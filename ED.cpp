@@ -5,19 +5,47 @@
 using namespace cv;
 using namespace std;
 
+ED::ED(const int _width, const int _height)
+{
+  prealloc(_width, _height);
+}
+
 ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
-       int _minPathLen, double _sigma, bool _sumFlag)
+            int _minPathLen, double _sigma, bool _sumFlag)
+{
+  prealloc(_srcImage.cols, _srcImage.rows);
+  process(_srcImage, _op, _gradThresh, _anchorThresh, _scanInterval, _minPathLen, _sigma, _sumFlag);
+}
+
+void ED::prealloc(const int _width, const int _height)
+{
+  width = _width;
+  height = _height;
+  edgeImage = Mat(height, width, CV_8UC1, Scalar(0));  // initialize edge Image
+  smoothImage = Mat(height, width, CV_8UC1);
+  dirImage = Mat(height, width, CV_8UC1);
+  gradImage = Mat(height, width, CV_16SC1);  // gradImage contains short values
+
+  chainNos.reserve((width + height) * 8);
+  pixels.reserve(width * height);
+  stack.reserve(width * height);
+  chains.reserve(width * height);
+}
+
+void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
+            int _minPathLen, double _sigma, bool _sumFlag)
 {
   const auto start_tick = getTickCount();
   // Check parameters for sanity
   if (_gradThresh < 1) _gradThresh = 1;
   if (_anchorThresh < 0) _anchorThresh = 0;
   if (_sigma < 1.0) _sigma = 1.0;
+  if (width != _srcImage.cols || height != _srcImage.rows)
+  {
+    throw std::runtime_error("Image width or height mismatch");
+  }
 
   srcImage = _srcImage;
-
-  height = srcImage.rows;
-  width = srcImage.cols;
 
   op = _op;
   gradThresh = _gradThresh;
@@ -28,12 +56,6 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, 
   sumFlag = _sumFlag;
 
   segmentNos = 0;
-  segmentPoints.push_back(vector<Point>());  // create empty vector of points for segments
-
-  edgeImage = Mat(height, width, CV_8UC1, Scalar(0));  // initialize edge Image
-  smoothImage = Mat(height, width, CV_8UC1);
-  dirImage = Mat(height, width, CV_8UC1);
-  gradImage = Mat(height, width, CV_16SC1);  // gradImage contains short values
 
   srcImg = srcImage.data;
   const auto initialize_tick = getTickCount();
@@ -433,10 +455,12 @@ void ED::ComputeAnchorPoints()
 void ED::JoinAnchorPointsUsingSortedAnchors()
 {
   const auto start_tick = getTickCount();
-  std::vector<int> chainNos((width + height) * 8);
-  std::vector<Point> pixels(width * height);
-  std::vector<StackNode> stack(width * height);
-  std::vector<Chain> chains(width * height);
+  chainNos.resize((width + height) * 8);
+  pixels.resize(width * height);
+  stack.resize(width * height);
+  chains.resize(width * height);
+  segmentPoints.clear();
+  segmentPoints.push_back(vector<Point>());
   const auto alloc_tick = getTickCount();
   lastEDProfile.join_anchor_points_alloc = (alloc_tick - start_tick) / getTickFrequency();
 
@@ -1090,6 +1114,11 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
   // pop back last segment from vector
   // because of one preallocation in the beginning, it will always empty
   segmentPoints.pop_back();
+
+  chainNos.clear();
+  pixels.clear();
+  stack.clear();
+  chains.clear();
 }
 
 void ED::sortAnchorsByGradValue()
