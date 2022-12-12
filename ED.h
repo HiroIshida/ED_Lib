@@ -122,7 +122,6 @@ class ED
   cv::Mat srcImage;
   Profile lastEDProfile;
 
- private:
   void ComputeGradient();
   void ComputeAnchorPoints();
   void JoinAnchorPointsUsingSortedAnchors();

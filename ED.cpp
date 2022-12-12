@@ -304,107 +304,55 @@ ED::Profile ED::getLastEDProfile() const { return lastEDProfile; }
 
 void ED::ComputeGradient()
 {
-  // Initialize gradient image for row = 0, row = height-1, column=0, column=width-1
-  for (int j = 0; j < width; j++)
+  cv::Mat kernel;
+  cv::Point anchor;
+  switch (op)
   {
-    gradImg[j] = gradImg[(height - 1) * width + j] = gradThresh - 1;
+  case PREWITT_OPERATOR:
+    kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
+    anchor = cv::Point(-1, -1);
+    break;
+  case SOBEL_OPERATOR:
+    kernel = (cv::Mat_<int>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
+    anchor = cv::Point(-1, -1);
+    break;
+  case SCHARR_OPERATOR:
+    kernel = (cv::Mat_<int>(3, 3) << -3, -10, -3, 0, 0, 0, 3, 10, 3);
+    anchor = cv::Point(-1, -1);
+    break;
+  case LSD_OPERATOR:
+    kernel = (cv::Mat_<int>(2, 2) << -1, -1, 1, 1);
+    anchor = cv::Point(0, 0);
+    break;
+  default:
+    throw std::runtime_error("Invalid op");
+    break;
   }
-  for (int i = 1; i < height - 1; i++)
+      
+  cv::Mat gxImageSigned, gyImageSigned;
+  cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t(), anchor);
+  cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel, anchor);
+  const cv::Mat gxImage = cv::abs(gxImageSigned);
+  const cv::Mat gyImage = cv::abs(gyImageSigned);
+  if (sumFlag)
   {
-    gradImg[i * width] = gradImg[(i + 1) * width - 1] = gradThresh - 1;
+    gradImage = gxImage + gyImage;
   }
-
-  for (int i = 1; i < height - 1; i++)
+  else
   {
-    for (int j = 1; j < width - 1; j++)
-    {
-      // Prewitt Operator in horizontal and vertical direction
-      // A B C
-      // D x E
-      // F G H
-      // gx = (C-A) + (E-D) + (H-F)
-      // gy = (F-A) + (G-B) + (H-C)
-      //
-      // To make this faster:
-      // com1 = (H-A)
-      // com2 = (C-F)
-      //
-      // For Prewitt
-      // Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
-      //       gy = com1 - com2 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-      //
-      // For Sobel
-      // Then: gx = com1 + com2 + 2*(E-D) = (H-A) + (C-F) + 2*(E-D) = (C-A) + 2*(E-D) + (H-F)
-      //       gy = com1 - com2 + 2*(G-B) = (H-A) - (C-F) + 2*(G-B) = (F-A) + 2*(G-B) + (H-C)
-      //
-      // For Scharr
-      // Then: gx = 3*(com1 + com2) + 10*(E-D) = 3*(H-A) + 3*(C-F) + 10*(E-D) = 3*(C-A) + 10*(E-D) +
-      // 3*(H-F)
-      //       gy = 3*(com1 - com2) + 10*(G-B) = 3*(H-A) - 3*(C-F) + 10*(G-B) = 3*(F-A) + 10*(G-B) +
-      //       3*(H-C)
-      //
-      // For LSD
-      // A B
-      // C D
-      // gx = (B-A) + (D-C)
-      // gy = (C-A) + (D-B)
-      //
-      // To make this faster:
-      // com1 = (D-A)
-      // com2 = (B-C)
-      // Then: gx = com1 + com2 = (D-A) + (B-C) = (B-A) + (D-C)
-      //       gy = com1 - com2 = (D-A) - (B-C) = (C-A) + (D-B)
-
-      int com1 = smoothImg[(i + 1) * width + j + 1] - smoothImg[(i - 1) * width + j - 1];
-      int com2 = smoothImg[(i - 1) * width + j + 1] - smoothImg[(i + 1) * width + j - 1];
-
-      int gx;
-      int gy;
-
-      switch (op)
-      {
-        case PREWITT_OPERATOR:
-          gx = abs(com1 + com2 + (smoothImg[i * width + j + 1] - smoothImg[i * width + j - 1]));
-          gy = abs(com1 - com2 + (smoothImg[(i + 1) * width + j] - smoothImg[(i - 1) * width + j]));
-          break;
-        case SOBEL_OPERATOR:
-          gx = abs(com1 + com2 + 2 * (smoothImg[i * width + j + 1] - smoothImg[i * width + j - 1]));
-          gy = abs(com1 - com2 +
-                   2 * (smoothImg[(i + 1) * width + j] - smoothImg[(i - 1) * width + j]));
-          break;
-        case SCHARR_OPERATOR:
-          gx = abs(3 * (com1 + com2) +
-                   10 * (smoothImg[i * width + j + 1] - smoothImg[i * width + j - 1]));
-          gy = abs(3 * (com1 - com2) +
-                   10 * (smoothImg[(i + 1) * width + j] - smoothImg[(i - 1) * width + j]));
-        case LSD_OPERATOR:
-          // com1 and com2 differs from previous operators, because LSD has 2x2 kernel
-          int com1 = smoothImg[(i + 1) * width + j + 1] - smoothImg[i * width + j];
-          int com2 = smoothImg[i * width + j + 1] - smoothImg[(i + 1) * width + j];
-
-          gx = abs(com1 + com2);
-          gy = abs(com1 - com2);
-      }
-
-      int sum;
-
-      if (sumFlag)
-        sum = gx + gy;
-      else
-        sum = (int)sqrt((double)gx * gx + gy * gy);
-
-      int index = i * width + j;
-      gradImg[index] = sum;
-
-      if (sum >= gradThresh)
-      {
-        if (gx >= gy)
-          dirImg[index] = EDGE_VERTICAL;
-        else
-          dirImg[index] = EDGE_HORIZONTAL;
-      }  // end-if
-    }    // end-for
-  }      // end-for
+    cv::sqrt(gxImage.mul(gxImage) + gyImage.mul(gyImage), gradImage);
+  }
+  gradImage.col(0).setTo(gradThresh - 1);
+  gradImage.col(gradImage.cols - 1).setTo(gradThresh - 1);
+  gradImage.row(0).setTo(gradThresh - 1);
+  gradImage.row(gradImage.rows - 1).setTo(gradThresh - 1);
+  dirImage = cv::Mat::zeros(gradImage.rows, gradImage.cols, CV_8UC1);
+  const cv::Mat maskThresh = gradImage >= gradThresh;
+  cv::Mat maskVertical, maskHorizontal;
+  cv::bitwise_and(maskThresh, gxImage >= gyImage, maskVertical);
+  cv::bitwise_and(maskThresh, gxImage < gyImage, maskHorizontal);
+  dirImage.setTo(EDGE_VERTICAL, maskVertical);
+  dirImage.setTo(EDGE_HORIZONTAL, maskHorizontal);
 }
 
 void ED::ComputeAnchorPoints()

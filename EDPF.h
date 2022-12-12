@@ -50,8 +50,7 @@ class EDPF : public ED
   Profile lastEDPFProfile;
 
   void validateEdgeSegments();
-  void ComputePrewitt3x3(
-      std::vector<short> &img);  // differs from base class's prewit function (calculates H)
+  void ComputePrewitt3x3();  // differs from base class's prewit function (calculates H)
   void TestSegment(int i, int index1, int index2);
   void ExtractNewSegments();
   double NFA(double prob, int len);
