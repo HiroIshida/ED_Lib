@@ -296,8 +296,8 @@ void ED::ComputeGradient()
   cv::Mat gxImageSigned, gyImageSigned;
   cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t(), anchor);
   cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel, anchor);
-  cv::Mat gxImage = cv::abs(gxImageSigned);
-  cv::Mat gyImage = cv::abs(gyImageSigned);
+  const cv::Mat gxImage = cv::abs(gxImageSigned);
+  const cv::Mat gyImage = cv::abs(gyImageSigned);
   if (sumFlag)
   {
     gradImage = gxImage + gyImage;
