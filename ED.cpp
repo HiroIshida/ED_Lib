@@ -310,6 +310,8 @@ void ED::ComputeGradient()
   gradImage.col(gradImage.cols - 1).setTo(gradThresh - 1);
   gradImage.row(0).setTo(gradThresh - 1);
   gradImage.row(gradImage.rows - 1).setTo(gradThresh - 1);
+  gradImg = (short *)gradImage.data;
+
   dirImage = cv::Mat::zeros(gradImage.rows, gradImage.cols, CV_8UC1);
   const cv::Mat maskThresh = gradImage >= gradThresh;
   cv::Mat maskVertical, maskHorizontal;
