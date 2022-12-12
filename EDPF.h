@@ -33,7 +33,6 @@ class EDPF : public ED
   double divForTestSegment;
   std::vector<double> H;
   int np;
-  std::vector<short> gradImg;
 
   void validateEdgeSegments();
   void ComputePrewitt3x3();  // differs from base class's prewit function (calculates H)
