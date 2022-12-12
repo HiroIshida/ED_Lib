@@ -96,7 +96,6 @@ class ED
   int minPathLen;
   cv::Mat srcImage;
 
- private:
   void ComputeGradient();
   void ComputeAnchorPoints();
   void JoinAnchorPointsUsingSortedAnchors();
