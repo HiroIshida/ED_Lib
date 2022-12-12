@@ -46,7 +46,6 @@ class EDPF : public ED
   double divForTestSegment;
   std::vector<double> H;
   int np;
-  std::vector<short> gradImg;
   Profile lastEDPFProfile;
 
   void validateEdgeSegments();

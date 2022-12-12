@@ -42,7 +42,6 @@ EDPF::EDPF(EDColor obj) : ED(obj) {}
 void EDPF::prealloc()
 {
   H.reserve(MAX_GRAD_VALUE);
-  gradImg.reserve(width * height);
 }
 
 void EDPF::process(cv::Mat _srcImage)
@@ -110,16 +109,14 @@ void EDPF::ComputePrewitt3x3()
   gradImage.col(gradImage.cols - 1).setTo(0);
   gradImage.row(0).setTo(0);
   gradImage.row(gradImage.rows - 1).setTo(0);
+  gradImg = (short *)gradImage.data;
 
   double max_grad_value = static_cast<double>(MAX_GRAD_VALUE);
   cv::minMaxLoc(gradImage, nullptr, &max_grad_value);
   std::vector<int> grads(static_cast<int>(max_grad_value) + 1, 0);
-  for (int i = 0; i < gradImage.cols; ++i)
+  for (int i = 0; i < gradImage.total(); ++i)
   {
-    for (int j = 0; j < gradImage.rows; ++j)
-    {
-      grads[gradImage.at<int>(i, j)]++;
-    }
+    grads[gradImg[i]]++;
   }
 
   // Compute probability function H
