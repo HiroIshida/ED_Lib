@@ -418,7 +418,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
   int totalPixels = 0;
   int segmentNos = 0;
 
-  for (int k = anchorPoints.size() - 1; k >= 0; k--)
+  for (int k = static_cast<int>(anchorPoints.size()) - 1; k >= 0; k--)
   {
     int pixelOffset = A[k];
 
