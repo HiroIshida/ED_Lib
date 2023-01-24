@@ -25,14 +25,28 @@
 class EDPF : public ED
 {
  public:
+
+  struct Profile
+  {
+    double gaussian_blur;
+    double validate_edge_segments;
+  };
+
+  EDPF(const int _width, const int _height);
   EDPF(cv::Mat srcImage);
   EDPF(ED obj);
   EDPF(EDColor obj);
+
+  void prealloc();
+  void process(cv::Mat _srcImage);
+
+  Profile getLastEDPFProfile() const;
 
  private:
   double divForTestSegment;
   std::vector<double> H;
   int np;
+  Profile lastEDPFProfile;
 
   void validateEdgeSegments();
   void ComputePrewitt3x3();  // differs from base class's prewit function (calculates H)

@@ -3,15 +3,31 @@
 using namespace cv;
 using namespace std;
 
+EDPF::EDPF(const int _width, const int _height)
+: ED(_width, _height)
+{
+  prealloc();
+}
+/*
 EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
 {
   // Validate Edge Segments
+  const auto start_tick = getTickCount();
   sigma /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
+  const auto gaussian_blur_tick = getTickCount();
+  lastEDPFProfile.gaussian_blur = (gaussian_blur_tick - start_tick) / getTickFrequency();
 
   validateEdgeSegments();
+  const auto validate_edge_segments_tick = getTickCount();
+  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
 }
-
+*/
+EDPF::EDPF(Mat srcImage) : ED(srcImage.cols, srcImage.rows)
+{
+  prealloc();
+  process(srcImage);
+}
 EDPF::EDPF(ED obj) : ED(obj)
 {
   // Validate Edge Segments
@@ -22,6 +38,27 @@ EDPF::EDPF(ED obj) : ED(obj)
 }
 
 EDPF::EDPF(EDColor obj) : ED(obj) {}
+
+void EDPF::prealloc()
+{
+  H.reserve(MAX_GRAD_VALUE);
+}
+
+void EDPF::process(cv::Mat _srcImage)
+{
+  ED::process(_srcImage, PREWITT_OPERATOR, 11, 3);
+  
+  // Validate Edge Segments
+  const auto start_tick = getTickCount();
+  sigma /= 2.5;
+  GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
+  const auto gaussian_blur_tick = getTickCount();
+  lastEDPFProfile.gaussian_blur = (gaussian_blur_tick - start_tick) / getTickFrequency();
+
+  validateEdgeSegments();
+  const auto validate_edge_segments_tick = getTickCount();
+  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
+}
 
 void EDPF::validateEdgeSegments()
 {
@@ -35,7 +72,7 @@ void EDPF::validateEdgeSegments()
   // Does this underestimate the number of pieces of edge segments?
   // What's the correct value?
   np = 0;
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     int len = segmentPoints[i].size();
     np += (len * (len - 1)) / 2;
@@ -45,7 +82,7 @@ void EDPF::validateEdgeSegments()
 #elif 0
   // This definitely overestimates the number of pieces of edge segments
   int np = 0;
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     np += segmentPoints[i].size();
   }  // end-for
@@ -53,7 +90,7 @@ void EDPF::validateEdgeSegments()
 #endif
 
   // Validate segments
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     TestSegment(i, 0, segmentPoints[i].size() - 1);
   }  // end-for
@@ -87,6 +124,7 @@ void EDPF::ComputePrewitt3x3()
   
   for (int i = grads.size() - 1; i > 0; i--) grads[i - 1] += grads[i];
 
+  H.clear();
   H.resize(grads.size(), 0);
   for (int i = 0; i < grads.size(); i++) H[i] = (double)grads[i] / ((double)size);
 }
@@ -168,11 +206,11 @@ void EDPF::TestSegment(int i, int index1, int index2)
 //
 void EDPF::ExtractNewSegments()
 {
-  // vector<Point> *segments = &segmentPoints[segmentNos];
+  // vector<Point> *segments = &segmentPoints[getSegmentNo()];
   vector<vector<Point> > validSegments;
   int noSegments = 0;
 
-  for (int i = 0; i < segmentNos; i++)
+  for (int i = 0; i < getSegmentNo(); i++)
   {
     int start = 0;
     while (start < segmentPoints[i].size())
@@ -214,8 +252,6 @@ void EDPF::ExtractNewSegments()
 
   // Copy to ed
   segmentPoints = validSegments;
-
-  segmentNos = noSegments;
 }
 
 //---------------------------------------------------------------------------
@@ -228,3 +264,5 @@ double EDPF::NFA(double prob, int len)
 
   return nfa;
 }
+
+EDPF::Profile EDPF::getLastEDPFProfile() const { return lastEDPFProfile; }

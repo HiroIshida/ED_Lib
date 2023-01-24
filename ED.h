@@ -60,6 +60,20 @@ struct Chain
 class ED
 {
  public:
+
+  struct Profile
+  {
+    double initialize;
+    double gaussian_blur;
+    double compute_gradient;
+    double compute_anchor_points;
+    double join_anchor_points_using_sorted_anchors;
+    // in JoinAnchorPointsUsingSortedAnchors method
+    double join_anchor_points_alloc;
+    double sort_anchors_by_grad_value;
+  };
+
+  ED(const int _width, const int _height);
   ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
      int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
      bool _sumFlag = true);
@@ -69,10 +83,20 @@ class ED
   ED(EDColor &cpyObj);
   ED();
 
+  void prealloc(const int _width, const int _height);
+
+  void process(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
+     int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
+     bool _sumFlag = true);
+  int getWidth() const { return width; }
+  int getHeight() const { return height; }
+  
+
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();
   cv::Mat getSmoothImage();
   cv::Mat getGradImage();
+  cv::Mat getDirImage();
 
   int getSegmentNo();
   int getAnchorNo();
@@ -83,6 +107,8 @@ class ED
 
   cv::Mat drawParticularSegments(std::vector<int> list);
 
+  Profile getLastEDProfile() const;
+
  protected:
   int width;   // width of source image
   int height;  // height of source image
@@ -92,9 +118,9 @@ class ED
   cv::Mat smoothImage;
   uchar *edgeImg;    // pointer to edge image data
   uchar *smoothImg;  // pointer to smoothed image data
-  int segmentNos;
   int minPathLen;
   cv::Mat srcImage;
+  Profile lastEDProfile;
 
   void ComputeGradient();
   void ComputeAnchorPoints();
@@ -105,9 +131,7 @@ class ED
   static int LongestChain(std::vector<Chain> &chains, int root);
   static int RetrieveChainNos(std::vector<Chain> &chains, int root, std::vector<int> &chainNos);
 
-  int anchorNos;
   std::vector<cv::Point> anchorPoints;
-  std::vector<cv::Point> edgePoints;
 
   cv::Mat edgeImage;
   cv::Mat dirImage;
@@ -121,6 +145,12 @@ class ED
   int anchorThresh;     // anchor point threshold
   int scanInterval;
   bool sumFlag;
+
+  // cached data used in JoinAnchorPointsUsingSortedAnchors
+  std::vector<int> chainNos;
+  std::vector<cv::Point> pixels;
+  std::vector<StackNode> stack;
+  std::vector<Chain> chains;
 };
 
 #endif
