@@ -96,10 +96,9 @@ void EDPF::validateEdgeSegments()
 void EDPF::ComputePrewitt3x3()
 {
   const cv::Mat kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
-  cv::Mat gxImageSigned, gyImageSigned;
   cv::filter2D(srcImage, gxImageSigned, CV_16SC1, kernel.t());
   cv::filter2D(srcImage, gyImageSigned, CV_16SC1, kernel);
-  gradImage = cv::abs(gxImageSigned) + cv::abs(gyImageSigned);
+  cv::add(cv::abs(gxImageSigned), cv::abs(gyImageSigned), gradImage);
   gradImage.col(0).setTo(0);
   gradImage.col(gradImage.cols - 1).setTo(0);
   gradImage.row(0).setTo(0);
@@ -108,7 +107,9 @@ void EDPF::ComputePrewitt3x3()
 
   double max_grad_value = static_cast<double>(MAX_GRAD_VALUE);
   cv::minMaxLoc(gradImage, nullptr, &max_grad_value);
-  std::vector<int> grads(static_cast<int>(max_grad_value) + 1, 0);
+  grads.clear();
+  grads.resize(static_cast<int>(max_grad_value) + 1);
+  std::fill(grads.begin(), grads.end(), 0);
   for (int i = 0; i < gradImage.total(); ++i)
   {
     grads[gradImg[i]]++;
@@ -116,7 +117,6 @@ void EDPF::ComputePrewitt3x3()
 
   // Compute probability function H
   const int size = (width - 2) * (height - 2);
-
   for (int i = grads.size() - 1; i > 0; i--) grads[i - 1] += grads[i];
 
   H.clear();
