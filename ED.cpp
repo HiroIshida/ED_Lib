@@ -353,7 +353,7 @@ void ED::ComputeGradient()
   cv::absdiff(gyImage, cv::Scalar::all(0), gyImage);
   if (sumFlag)
   {
-    cv::add(cv::abs(gxImage), cv::abs(gyImage), gradImage);
+    cv::add(gxImage, gyImage, gradImage);
   }
   else
   {
