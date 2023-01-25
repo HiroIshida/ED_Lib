@@ -3,11 +3,7 @@
 using namespace cv;
 using namespace std;
 
-EDPF::EDPF(const int _width, const int _height)
-: ED(_width, _height)
-{
-  prealloc();
-}
+EDPF::EDPF(const int _width, const int _height) : ED(_width, _height) { prealloc(); }
 /*
 EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
 {
@@ -20,7 +16,8 @@ EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3)
 
   validateEdgeSegments();
   const auto validate_edge_segments_tick = getTickCount();
-  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
+  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) /
+getTickFrequency();
 }
 */
 EDPF::EDPF(Mat srcImage) : ED(srcImage.cols, srcImage.rows)
@@ -39,15 +36,12 @@ EDPF::EDPF(ED obj) : ED(obj)
 
 EDPF::EDPF(EDColor obj) : ED(obj) {}
 
-void EDPF::prealloc()
-{
-  H.reserve(MAX_GRAD_VALUE);
-}
+void EDPF::prealloc() { H.reserve(MAX_GRAD_VALUE); }
 
 void EDPF::process(cv::Mat _srcImage)
 {
   ED::process(_srcImage, PREWITT_OPERATOR, 11, 3);
-  
+
   // Validate Edge Segments
   const auto start_tick = getTickCount();
   sigma /= 2.5;
@@ -57,7 +51,8 @@ void EDPF::process(cv::Mat _srcImage)
 
   validateEdgeSegments();
   const auto validate_edge_segments_tick = getTickCount();
-  lastEDPFProfile.validate_edge_segments = (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
+  lastEDPFProfile.validate_edge_segments =
+      (validate_edge_segments_tick - gaussian_blur_tick) / getTickFrequency();
 }
 
 void EDPF::validateEdgeSegments()
@@ -121,7 +116,7 @@ void EDPF::ComputePrewitt3x3()
 
   // Compute probability function H
   const int size = (width - 2) * (height - 2);
-  
+
   for (int i = grads.size() - 1; i > 0; i--) grads[i - 1] += grads[i];
 
   H.clear();
@@ -240,9 +235,9 @@ void EDPF::ExtractNewSegments()
         // A new segment. Accepted only only long enough (whatever that means)
         // segments[noSegments].pixels = &map->segments[i].pixels[start];
         // segments[noSegments].noPixels = len;
-        validSegments.push_back(vector<Point>());
-        vector<Point> subVec(&segmentPoints[i][start], &segmentPoints[i][end - 1]);
-        validSegments[noSegments] = subVec;
+        std::vector<cv::Point> subVec = takePointVectorFromPool();
+        subVec.insert(subVec.begin(), &segmentPoints[i][start], &segmentPoints[i][end - 1]);
+        validSegments.push_back(subVec);
         noSegments++;
       }  // end-else
 
@@ -251,6 +246,11 @@ void EDPF::ExtractNewSegments()
   }    // end-for
 
   // Copy to ed
+  // before copying return vectors to the pool
+  for (int i = 0; i < static_cast<int>(segmentPoints.size()); ++i)
+  {
+    returnPointVectorToPool(std::move(segmentPoints[i]));
+  }
   segmentPoints = validSegments;
 }
 

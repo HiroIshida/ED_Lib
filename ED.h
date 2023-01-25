@@ -17,6 +17,8 @@
 #ifndef _ED_
 #define _ED_
 
+#include <deque>
+
 #include <opencv2/opencv.hpp>
 #include "EDColor.h"
 
@@ -60,7 +62,6 @@ struct Chain
 class ED
 {
  public:
-
   struct Profile
   {
     double initialize;
@@ -86,11 +87,10 @@ class ED
   void prealloc(const int _width, const int _height);
 
   void process(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
-     int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
-     bool _sumFlag = true);
+               int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10,
+               double _sigma = 1.0, bool _sumFlag = true);
   int getWidth() const { return width; }
   int getHeight() const { return height; }
-  
 
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();
@@ -131,6 +131,9 @@ class ED
   static int LongestChain(std::vector<Chain> &chains, int root);
   static int RetrieveChainNos(std::vector<Chain> &chains, int root, std::vector<int> &chainNos);
 
+  std::vector<cv::Point> takePointVectorFromPool();
+  void returnPointVectorToPool(std::vector<cv::Point> point_vec);
+
   std::vector<cv::Point> anchorPoints;
 
   cv::Mat edgeImage;
@@ -151,6 +154,9 @@ class ED
   std::vector<cv::Point> pixels;
   std::vector<StackNode> stack;
   std::vector<Chain> chains;
+
+  // pool for cv::Point vector
+  std::deque<std::vector<cv::Point>> m_point_vector_pool;
 };
 
 #endif
