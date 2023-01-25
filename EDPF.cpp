@@ -104,7 +104,7 @@ void EDPF::ComputePrewitt3x3()
   cv::Mat gxImageSigned, gyImageSigned;
   cv::filter2D(srcImage, gxImageSigned, CV_16SC1, kernel.t());
   cv::filter2D(srcImage, gyImageSigned, CV_16SC1, kernel);
-  gradImage = cv::abs(gxImageSigned) + cv::abs(gyImageSigned);
+  cv::add(cv::abs(gxImageSigned), cv::abs(gyImageSigned), gradImage);
   gradImage.col(0).setTo(0);
   gradImage.col(gradImage.cols - 1).setTo(0);
   gradImage.row(0).setTo(0);
@@ -113,7 +113,9 @@ void EDPF::ComputePrewitt3x3()
 
   double max_grad_value = static_cast<double>(MAX_GRAD_VALUE);
   cv::minMaxLoc(gradImage, nullptr, &max_grad_value);
-  std::vector<int> grads(static_cast<int>(max_grad_value) + 1, 0);
+  grads.clear();
+  grads.resize(static_cast<int>(max_grad_value) + 1);
+  std::fill(grads.begin(), grads.end(), 0);
   for (int i = 0; i < gradImage.total(); ++i)
   {
     grads[gradImg[i]]++;

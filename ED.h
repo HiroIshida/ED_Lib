@@ -136,6 +136,11 @@ class ED
   cv::Mat edgeImage;
   cv::Mat dirImage;
   cv::Mat gradImage;
+  cv::Mat gxImageSigned;
+  cv::Mat gyImageSigned;
+  cv::Mat maskThresh;
+  cv::Mat maskVertical;
+  cv::Mat maskHorizontal;
 
   uchar *dirImg;   // pointer to direction image data
   short *gradImg;  // pointer to gradient image data

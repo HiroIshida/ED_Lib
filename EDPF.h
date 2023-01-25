@@ -25,7 +25,6 @@
 class EDPF : public ED
 {
  public:
-
   struct Profile
   {
     double gaussian_blur;
@@ -47,6 +46,7 @@ class EDPF : public ED
   std::vector<double> H;
   int np;
   Profile lastEDPFProfile;
+  std::vector<int> grads;
 
   void validateEdgeSegments();
   void ComputePrewitt3x3();  // differs from base class's prewit function (calculates H)
