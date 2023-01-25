@@ -345,20 +345,23 @@ void ED::ComputeGradient()
       break;
   }
 
-  cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t(), anchor);
-  cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel, anchor);
-  gxImage = cv::abs(gxImageSigned);
-  gyImage = cv::abs(gyImageSigned);
+  cv::Mat &gxImage = buffer0;
+  cv::Mat &gyImage = buffer1;
+  cv::filter2D(smoothImage, gxImage, CV_16SC1, kernel.t(), anchor);
+  cv::filter2D(smoothImage, gyImage, CV_16SC1, kernel, anchor);
+  cv::absdiff(gxImage, cv::Scalar::all(0), gxImage);  // gxImage = cv::abs(gxImage)
+  cv::absdiff(gyImage, cv::Scalar::all(0), gyImage);
   if (sumFlag)
   {
-    cv::add(gxImage, gyImage, gradImage);
+    cv::add(cv::abs(gxImage), cv::abs(gyImage), gradImage);
   }
   else
   {
-    // gxImageSigned and gyImageSigned is used as buffer for square
-    cv::multiply(gxImage, gxImage, gxImageSigned);
-    cv::multiply(gyImage, gyImage, gyImageSigned);
-    cv::add(gxImageSigned, gyImageSigned, gradImage);
+    cv::Mat &gxImageSquared = buffer2;
+    cv::Mat &gyImageSquared = buffer3;
+    cv::multiply(gxImage, gxImage, gxImageSquared);
+    cv::multiply(gyImage, gyImage, gyImageSquared);
+    cv::add(gxImageSquared, gyImageSquared, gradImage);
     cv::sqrt(gradImage, gradImage);
   }
   gradImage.col(0).setTo(gradThresh - 1);
@@ -368,8 +371,14 @@ void ED::ComputeGradient()
   gradImg = (short *)gradImage.data;
 
   dirImage.setTo(0);
+
+  cv::Mat &maskThresh = buffer2;
+  cv::Mat &maskImage = buffer3;
   cv::compare(gradImage, gradThresh, maskThresh, cv::CMP_GE);
   cv::compare(gxImage, gyImage, maskImage, cv::CMP_GE);
+
+  cv::Mat &maskVertical = buffer0;
+  cv::Mat &maskHorizontal = buffer1;
   cv::bitwise_and(maskThresh, maskImage, maskVertical);
   cv::bitwise_not(maskImage, maskImage);
   cv::bitwise_and(maskThresh, maskImage, maskHorizontal);

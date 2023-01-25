@@ -139,14 +139,14 @@ class ED
   cv::Mat edgeImage;
   cv::Mat dirImage;
   cv::Mat gradImage;
-  cv::Mat gxImageSigned;
-  cv::Mat gyImageSigned;
-  cv::Mat gxImage;
-  cv::Mat gyImage;
-  cv::Mat maskImage;
-  cv::Mat maskThresh;
-  cv::Mat maskVertical;
-  cv::Mat maskHorizontal;
+
+  // Buffer with the same size as srcImage
+  // Use these locally and
+  // don't share data among functions with these
+  cv::Mat buffer0;
+  cv::Mat buffer1;
+  cv::Mat buffer2;
+  cv::Mat buffer3;
 
   uchar *dirImg;   // pointer to direction image data
   short *gradImg;  // pointer to gradient image data

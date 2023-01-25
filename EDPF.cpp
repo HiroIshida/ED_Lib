@@ -96,9 +96,13 @@ void EDPF::validateEdgeSegments()
 void EDPF::ComputePrewitt3x3()
 {
   const cv::Mat kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
-  cv::filter2D(srcImage, gxImageSigned, CV_16SC1, kernel.t());
-  cv::filter2D(srcImage, gyImageSigned, CV_16SC1, kernel);
-  cv::add(cv::abs(gxImageSigned), cv::abs(gyImageSigned), gradImage);
+  cv::Mat &gxImage = buffer0;
+  cv::Mat &gyImage = buffer1;
+  cv::filter2D(srcImage, gxImage, CV_16SC1, kernel.t());
+  cv::filter2D(srcImage, gyImage, CV_16SC1, kernel);
+  cv::absdiff(gxImage, cv::Scalar::all(0), gxImage);  // gxImage = cv::abs(gxImage)
+  cv::absdiff(gyImage, cv::Scalar::all(0), gyImage);
+  cv::add(gxImage, gyImage, gradImage);
   gradImage.col(0).setTo(0);
   gradImage.col(gradImage.cols - 1).setTo(0);
   gradImage.row(0).setTo(0);
