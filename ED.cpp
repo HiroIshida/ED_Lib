@@ -353,8 +353,10 @@ void ED::ComputeGradient()
 
   dirImage.setTo(0);
   cv::compare(gradImage, gradThresh, maskThresh, cv::CMP_GE);
-  cv::bitwise_and(maskThresh, gxImage >= gyImage, maskVertical);
-  cv::bitwise_and(maskThresh, gxImage < gyImage, maskHorizontal);
+  cv::compare(gxImage, gyImage, maskImage, cv::CMP_GE);
+  cv::bitwise_and(maskThresh, maskImage, maskVertical);
+  cv::bitwise_not(maskImage, maskImage);
+  cv::bitwise_and(maskThresh, maskImage, maskHorizontal);
   dirImage.setTo(EDGE_VERTICAL, maskVertical);
   dirImage.setTo(EDGE_HORIZONTAL, maskHorizontal);
 }

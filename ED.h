@@ -138,6 +138,7 @@ class ED
   cv::Mat gyImageSigned;
   cv::Mat gxImage;
   cv::Mat gyImage;
+  cv::Mat maskImage;
   cv::Mat maskThresh;
   cv::Mat maskVertical;
   cv::Mat maskHorizontal;
