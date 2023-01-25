@@ -331,15 +331,18 @@ void ED::ComputeGradient()
 
   cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t(), anchor);
   cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel, anchor);
-  const cv::MatExpr gxImage = cv::abs(gxImageSigned);
-  const cv::MatExpr gyImage = cv::abs(gyImageSigned);
+  gxImage = cv::abs(gxImageSigned);
+  gyImage = cv::abs(gyImageSigned);
   if (sumFlag)
   {
     cv::add(gxImage, gyImage, gradImage);
   }
   else
   {
-    cv::add(gxImage.mul(gxImage), gyImage.mul(gyImage), gradImage);
+    // gxImageSigned and gyImageSigned is used as buffer for square
+    cv::multiply(gxImage, gxImage, gxImageSigned);
+    cv::multiply(gyImage, gyImage, gyImageSigned);
+    cv::add(gxImageSigned, gyImageSigned, gradImage);
     cv::sqrt(gradImage, gradImage);
   }
   gradImage.col(0).setTo(gradThresh - 1);
