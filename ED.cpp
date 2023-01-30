@@ -5,13 +5,10 @@
 using namespace cv;
 using namespace std;
 
-ED::ED(const int _width, const int _height)
-{
-  prealloc(_width, _height);
-}
+ED::ED(const int _width, const int _height) { prealloc(_width, _height); }
 
 ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
-            int _minPathLen, double _sigma, bool _sumFlag)
+       int _minPathLen, double _sigma, bool _sumFlag)
 {
   prealloc(_srcImage.cols, _srcImage.rows);
   process(_srcImage, _op, _gradThresh, _anchorThresh, _scanInterval, _minPathLen, _sigma, _sumFlag);
@@ -32,8 +29,26 @@ void ED::prealloc(const int _width, const int _height)
   chains.resize(width * height);
 }
 
-void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
-            int _minPathLen, double _sigma, bool _sumFlag)
+std::vector<cv::Point> ED::takePointVectorFromPool()
+{
+  if (m_point_vector_pool.size() > 0)
+  {
+    auto pvec = std::move(m_point_vector_pool.front());
+    m_point_vector_pool.pop_front();
+    return pvec;
+  }
+
+  return std::vector<cv::Point>();
+}
+
+void ED::returnPointVectorToPool(std::vector<cv::Point> point_vec)
+{
+  point_vec.clear();
+  m_point_vector_pool.push_back(std::move(point_vec));
+}
+
+void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
+                 int _scanInterval, int _minPathLen, double _sigma, bool _sumFlag)
 {
   const auto start_tick = getTickCount();
   // Check parameters for sanity
@@ -58,7 +73,7 @@ void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anch
   srcImg = srcImage.data;
   const auto initialize_tick = getTickCount();
   lastEDProfile.initialize = (initialize_tick - start_tick) / getTickFrequency();
-  
+
   //// Detect Edges By Edge Drawing Algorithm  ////
 
   /*------------ SMOOTH THE IMAGE BY A GAUSSIAN KERNEL -------------------*/
@@ -79,18 +94,21 @@ void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anch
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
   ComputeGradient();
   const auto compute_gradient_tick = getTickCount();
-  lastEDProfile.compute_gradient = (compute_gradient_tick - gaussian_blur_tick) / getTickFrequency();
+  lastEDProfile.compute_gradient =
+      (compute_gradient_tick - gaussian_blur_tick) / getTickFrequency();
 
   /*------------ COMPUTE ANCHORS -------------------*/
   ComputeAnchorPoints();
   const auto compute_anchor_points_tick = getTickCount();
-  lastEDProfile.compute_anchor_points = (compute_anchor_points_tick - compute_gradient_tick) / getTickFrequency();
+  lastEDProfile.compute_anchor_points =
+      (compute_anchor_points_tick - compute_gradient_tick) / getTickFrequency();
 
   /*------------ JOIN ANCHORS -------------------*/
   JoinAnchorPointsUsingSortedAnchors();
   const auto join_anchor_points_using_sorted_anchors_tick = getTickCount();
   lastEDProfile.join_anchor_points_using_sorted_anchors =
-    (join_anchor_points_using_sorted_anchors_tick - compute_anchor_points_tick) / getTickFrequency();
+      (join_anchor_points_using_sorted_anchors_tick - compute_anchor_points_tick) /
+      getTickFrequency();
 }
 
 // This constructor for use of EDLines and EDCircle with ED given as constructor argument
@@ -225,8 +243,6 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
                             // stable anchors.)
   }                         // end-else
 
-  segmentPoints.push_back(vector<Point>());  // create empty vector of points for segments
-
   JoinAnchorPointsUsingSortedAnchors();
 }
 
@@ -308,39 +324,45 @@ void ED::ComputeGradient()
   cv::Point anchor;
   switch (op)
   {
-  case PREWITT_OPERATOR:
-    kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
-    anchor = cv::Point(-1, -1);
-    break;
-  case SOBEL_OPERATOR:
-    kernel = (cv::Mat_<int>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
-    anchor = cv::Point(-1, -1);
-    break;
-  case SCHARR_OPERATOR:
-    kernel = (cv::Mat_<int>(3, 3) << -3, -10, -3, 0, 0, 0, 3, 10, 3);
-    anchor = cv::Point(-1, -1);
-    break;
-  case LSD_OPERATOR:
-    kernel = (cv::Mat_<int>(2, 2) << -1, -1, 1, 1);
-    anchor = cv::Point(0, 0);
-    break;
-  default:
-    throw std::runtime_error("Invalid op");
-    break;
+    case PREWITT_OPERATOR:
+      kernel = (cv::Mat_<int>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
+      anchor = cv::Point(-1, -1);
+      break;
+    case SOBEL_OPERATOR:
+      kernel = (cv::Mat_<int>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
+      anchor = cv::Point(-1, -1);
+      break;
+    case SCHARR_OPERATOR:
+      kernel = (cv::Mat_<int>(3, 3) << -3, -10, -3, 0, 0, 0, 3, 10, 3);
+      anchor = cv::Point(-1, -1);
+      break;
+    case LSD_OPERATOR:
+      kernel = (cv::Mat_<int>(2, 2) << -1, -1, 1, 1);
+      anchor = cv::Point(0, 0);
+      break;
+    default:
+      throw std::runtime_error("Invalid op");
+      break;
   }
-      
-  cv::Mat gxImageSigned, gyImageSigned;
-  cv::filter2D(smoothImage, gxImageSigned, CV_16SC1, kernel.t(), anchor);
-  cv::filter2D(smoothImage, gyImageSigned, CV_16SC1, kernel, anchor);
-  const cv::Mat gxImage = cv::abs(gxImageSigned);
-  const cv::Mat gyImage = cv::abs(gyImageSigned);
+
+  cv::Mat &gxImage = buffer0;
+  cv::Mat &gyImage = buffer1;
+  cv::filter2D(smoothImage, gxImage, CV_16SC1, kernel.t(), anchor);
+  cv::filter2D(smoothImage, gyImage, CV_16SC1, kernel, anchor);
+  cv::absdiff(gxImage, cv::Scalar::all(0), gxImage);  // gxImage = cv::abs(gxImage)
+  cv::absdiff(gyImage, cv::Scalar::all(0), gyImage);
   if (sumFlag)
   {
-    gradImage = gxImage + gyImage;
+    cv::add(gxImage, gyImage, gradImage);
   }
   else
   {
-    cv::sqrt(gxImage.mul(gxImage) + gyImage.mul(gyImage), gradImage);
+    cv::Mat &gxImageSquared = buffer2;
+    cv::Mat &gyImageSquared = buffer3;
+    cv::multiply(gxImage, gxImage, gxImageSquared);
+    cv::multiply(gyImage, gyImage, gyImageSquared);
+    cv::add(gxImageSquared, gyImageSquared, gradImage);
+    cv::sqrt(gradImage, gradImage);
   }
   gradImage.col(0).setTo(gradThresh - 1);
   gradImage.col(gradImage.cols - 1).setTo(gradThresh - 1);
@@ -348,11 +370,18 @@ void ED::ComputeGradient()
   gradImage.row(gradImage.rows - 1).setTo(gradThresh - 1);
   gradImg = (short *)gradImage.data;
 
-  dirImage = cv::Mat::zeros(gradImage.rows, gradImage.cols, CV_8UC1);
-  const cv::Mat maskThresh = gradImage >= gradThresh;
-  cv::Mat maskVertical, maskHorizontal;
-  cv::bitwise_and(maskThresh, gxImage >= gyImage, maskVertical);
-  cv::bitwise_and(maskThresh, gxImage < gyImage, maskHorizontal);
+  dirImage.setTo(0);
+
+  cv::Mat &maskThresh = buffer2;
+  cv::Mat &maskImage = buffer3;
+  cv::compare(gradImage, gradThresh, maskThresh, cv::CMP_GE);
+  cv::compare(gxImage, gyImage, maskImage, cv::CMP_GE);
+
+  cv::Mat &maskVertical = buffer0;
+  cv::Mat &maskHorizontal = buffer1;
+  cv::bitwise_and(maskThresh, maskImage, maskVertical);
+  cv::bitwise_not(maskImage, maskImage);
+  cv::bitwise_and(maskThresh, maskImage, maskHorizontal);
   dirImage.setTo(EDGE_VERTICAL, maskVertical);
   dirImage.setTo(EDGE_HORIZONTAL, maskHorizontal);
 }
@@ -403,8 +432,13 @@ void ED::ComputeAnchorPoints()
 void ED::JoinAnchorPointsUsingSortedAnchors()
 {
   const auto start_tick = getTickCount();
+  // return point vectors to the pool before the clear
+  for (int i = 0; i < static_cast<int>(segmentPoints.size()); ++i)
+  {
+    returnPointVectorToPool(std::move(segmentPoints[i]));
+  }
   segmentPoints.clear();
-  segmentPoints.push_back(vector<Point>());
+  segmentPoints.push_back(takePointVectorFromPool());
   const auto alloc_tick = getTickCount();
   lastEDProfile.join_anchor_points_alloc = (alloc_tick - start_tick) / getTickFrequency();
 
@@ -412,7 +446,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
   std::vector<int> A;
   sortAnchorsByGradValue1(A);
   const auto sort_anchors_by_grad_value_tick = getTickCount();
-  lastEDProfile.sort_anchors_by_grad_value = (sort_anchors_by_grad_value_tick - alloc_tick) / getTickFrequency();
+  lastEDProfile.sort_anchors_by_grad_value =
+      (sort_anchors_by_grad_value_tick - alloc_tick) / getTickFrequency();
 
   // Now join the anchors starting with the anchor having the greatest gradient value
   int totalPixels = 0;
@@ -980,7 +1015,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
       }  // end-if
 
       segmentNos++;
-      segmentPoints.push_back(vector<Point>());  // create empty vector of points for segments
+      segmentPoints.push_back(
+          takePointVectorFromPool());  // create empty vector of points for segments
 
       // Copy the rest of the long chains here
       for (int k = 2; k < noChains; k++)
@@ -1045,9 +1081,10 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
               noSegmentPixels++;
             }  // end-for
 
-            chains[chainNo].len = 0;                 // Mark as copied
-          }                                          // end-for
-          segmentPoints.push_back(vector<Point>());  // create empty vector of points for segments
+            chains[chainNo].len = 0;  // Mark as copied
+          }                           // end-for
+          segmentPoints.push_back(
+              takePointVectorFromPool());  // create empty vector of points for segments
           segmentNos++;
         }  // end-if
       }    // end-for
@@ -1058,6 +1095,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 
   // pop back last segment from vector
   // because of one preallocation in the beginning, it will always empty
+  returnPointVectorToPool(std::move(segmentPoints.back()));
   segmentPoints.pop_back();
 }
 
