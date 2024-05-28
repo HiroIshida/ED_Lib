@@ -8,10 +8,10 @@ using namespace std;
 ED::ED(const int _width, const int _height) { prealloc(_width, _height); }
 
 ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh, int _scanInterval,
-       int _minPathLen, double _sigma, bool _sumFlag)
+       int _minPathLen, int _kSize, double _sigma, bool _sumFlag)
 {
   prealloc(_srcImage.cols, _srcImage.rows);
-  process(_srcImage, _op, _gradThresh, _anchorThresh, _scanInterval, _minPathLen, _sigma, _sumFlag);
+  process(_srcImage, _op, _gradThresh, _anchorThresh, _scanInterval, _minPathLen, _kSize, _sigma, _sumFlag);
 }
 
 void ED::prealloc(const int _width, const int _height)
@@ -48,13 +48,15 @@ void ED::returnPointVectorToPool(std::vector<cv::Point> point_vec)
 }
 
 void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
-                 int _scanInterval, int _minPathLen, double _sigma, bool _sumFlag)
+                 int _scanInterval, int _minPathLen, int _kSize, double _sigma, bool _sumFlag)
 {
   const auto start_tick = getTickCount();
   // Check parameters for sanity
   if (_gradThresh < 1) _gradThresh = 1;
   if (_anchorThresh < 0) _anchorThresh = 0;
   if (_sigma < 1.0) _sigma = 1.0;
+  if (_kSize < 1) _kSize = 1;
+  else if (_kSize % 2 == 0) _kSize = _kSize + 1;
   if (width != _srcImage.cols || height != _srcImage.rows)
   {
     throw std::runtime_error("Image width or height mismatch");
@@ -78,7 +80,7 @@ void ED::process(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anch
 
   /*------------ SMOOTH THE IMAGE BY A GAUSSIAN KERNEL -------------------*/
   if (sigma == 1.0)
-    GaussianBlur(srcImage, smoothImage, Size(5, 5), sigma);
+    GaussianBlur(srcImage, smoothImage, Size(_kSize, _kSize), sigma);
   else
     GaussianBlur(srcImage, smoothImage, Size(), sigma);  // calculate kernel from sigma
   const auto gaussian_blur_tick = getTickCount();

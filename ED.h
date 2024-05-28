@@ -76,8 +76,8 @@ class ED
 
   ED(const int _width, const int _height);
   ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
-     int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0,
-     bool _sumFlag = true);
+     int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, int _kSize = 5,
+     double _sigma = 1.0, bool _sumFlag = true);
   ED(const ED &cpyObj);
   ED(short *gradImg, uchar *dirImg, int _width, int _height, int _gradThresh, int _anchorThresh,
      int _scanInterval = 1, int _minPathLen = 10, bool selectStableAnchors = true);
@@ -88,7 +88,7 @@ class ED
 
   void process(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20,
                int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10,
-               double _sigma = 1.0, bool _sumFlag = true);
+               int _kSize = 5, double _sigma = 1.0, bool _sumFlag = true);
   int getWidth() const { return width; }
   int getHeight() const { return height; }
 
