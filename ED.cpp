@@ -363,8 +363,12 @@ void ED::ComputeGradient()
     cv::Mat &gyImageSquared = buffer3;
     cv::multiply(gxImage, gxImage, gxImageSquared);
     cv::multiply(gyImage, gyImage, gyImageSquared);
-    cv::add(gxImageSquared, gyImageSquared, gradImage);
-    cv::sqrt(gradImage, gradImage);
+    cv::add(gxImageSquared, gyImageSquared, gxImageSquared);
+    // convert 32FC1 for cv::sqrt
+    cv::Mat gradFloatImage = buffer3;
+    gxImageSquared.convertTo(gradFloatImage, CV_32FC1);
+    cv::sqrt(gradFloatImage, gradFloatImage);
+    gradFloatImage.convertTo(gradImage, CV_16SC1);
   }
   gradImage.col(0).setTo(gradThresh - 1);
   gradImage.col(gradImage.cols - 1).setTo(gradThresh - 1);
