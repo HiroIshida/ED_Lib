@@ -1,3 +1,13 @@
+# edlib (python binding of ED_Lib)
+installation 
+```bash
+git submodule update --init --recursive
+pip install scikit-build
+pip install -e . -v
+```
+
+see [example.py](example.py) for usage
+
 # ED_Lib
 EDGE DRAWING LIBRARY FOR GEOMETRIC FEATURE EXTRACTION AND VALIDATION
 
