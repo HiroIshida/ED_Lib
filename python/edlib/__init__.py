@@ -1,1 +1,1 @@
-from ._edlib import Ellipse, EDCircles
+from ._edlib import Circle, Ellipse, EDCircles
